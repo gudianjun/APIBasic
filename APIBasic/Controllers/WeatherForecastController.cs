@@ -1,7 +1,8 @@
 
-using APIBasic.Common;
+ 
+using APIBasic.Data;
+using APIBasic.DTOs;
 using APIBasic.Enums;
-using APIBasic.Models;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ namespace APIBasic.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [ApiVersion("1.0")]Å@
+    [ApiVersion("1.0")]
     public class WeatherForecastController : ControllerBase
     {
         private static readonly string[] Summaries = new[]

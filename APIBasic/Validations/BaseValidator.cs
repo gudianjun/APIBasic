@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace APIBasic.Validations
 {
+    /// <summary>
+    /// 简单校验类型
+    /// </summary>
     public class BaseValidator
     {
         public static ValidationResult? ValidateName(string name, ValidationContext context)

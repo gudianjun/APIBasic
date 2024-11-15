@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
-namespace APIBasic.Common
+namespace APIBasic.DTOs
 {
     //    1.	成功响应：
     //•	"Success"：请求成功。

@@ -1,9 +1,10 @@
-﻿ 
+﻿
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using APIBasic.Common;
+ 
+using APIBasic.DTOs;
 
-namespace APIBasic.Middleware
+namespace APIBasic.Filters
 {
     public class ValidationFilter : IActionFilter
     {

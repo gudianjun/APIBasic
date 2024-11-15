@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 
-namespace APIBasic.Common
+namespace APIBasic.DTOs
 {
     //    使用标准的HTTP状态码来表示请求的结果：
     //•	200 OK：请求成功
