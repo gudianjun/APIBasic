@@ -1,4 +1,4 @@
-﻿using APIBasic.Mobel;
+﻿ 
 using Microsoft.AspNetCore.Http.HttpResults;
 using System.Net;
 
@@ -33,18 +33,21 @@ namespace APIBasic.Middleware
        
         private Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            
-            var response = new
+            if (!context.Response.HasStarted)
             {
-                StatusCode = context.Response.StatusCode,
-                Message = "Internal server error. Please try again later.",
-                 Detailed = _env.IsDevelopment() == true ? exception.Message : null
-            };
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-            return context.Response.WriteAsJsonAsync(response);  
+                var response = new
+                {
+                    StatusCode = context.Response.StatusCode,
+                    Message = "Internal server error. Please try again later.",
+                    Detailed = _env.IsDevelopment() == true ? exception.Message : null
+                };
+
+                return context.Response.WriteAsJsonAsync(response);
+            }
+            return Task.CompletedTask;
         }
     }
 }

@@ -1,17 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 
-namespace APIBasic.Mobel
+namespace APIBasic.Common
 {
-//    使用标准的HTTP状态码来表示请求的结果：
-//•	200 OK：请求成功
-//•	201 Created：资源创建成功
-//•	204 No Content：请求成功但没有返回内容
-//•	400 Bad Request：请求无效
-//•	401 Unauthorized：未授权
-//•	403 Forbidden：禁止访问
-//•	404 Not Found：资源未找到
-//•	500 Internal Server Error：服务器内部错误
+    //    使用标准的HTTP状态码来表示请求的结果：
+    //•	200 OK：请求成功
+    //•	201 Created：资源创建成功
+    //•	204 No Content：请求成功但没有返回内容
+    //•	400 Bad Request：请求无效
+    //•	401 Unauthorized：未授权
+    //•	403 Forbidden：禁止访问
+    //•	404 Not Found：资源未找到
+    //•	500 Internal Server Error：服务器内部错误
     public class CustomActionResult : ActionResult
     {
         private readonly object? _value;

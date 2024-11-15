@@ -1,4 +1,6 @@
-﻿using Asp.Versioning;
+﻿using APIBasic.Enums;
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,7 +8,7 @@ namespace APIBasic.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [ApiVersion("2.0")]
+    [ApiVersion("1.0")]
     public class ValuesController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
@@ -22,6 +24,7 @@ namespace APIBasic.Controllers
         private readonly ILogger<WeatherForecastController> _logger;
 
         [HttpGet(Name = "GetWeatherForecastV32")]
+        [Authorize(Roles = Roles.Admin)]
         public IEnumerable<WeatherForecast> Get()
         {
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
