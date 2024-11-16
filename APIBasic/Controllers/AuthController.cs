@@ -31,7 +31,7 @@ namespace APIBasic.Controllers
         [AllowAnonymous]
         public IActionResult GenerateToken([FromBody] UserCredentials credentials)
         {
-            var albums = _context.Albums!.Select(a => a.Title).ToList();
+            // var albums = _context.Albums!.Select(a => a.Title).ToList();
             if (true)
             {
                 var claims = new[]
