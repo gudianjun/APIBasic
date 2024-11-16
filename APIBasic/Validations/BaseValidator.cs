@@ -16,7 +16,7 @@ namespace APIBasic.Validations
             }
             return ValidationResult.Success;
         }
-        public static ValidationResult? ValidateAudience(AudienceEnum name, ValidationContext context)
+        public static ValidationResult? ValidateAudience(Audience name, ValidationContext context)
         { 
             return ValidationResult.Success;
         }

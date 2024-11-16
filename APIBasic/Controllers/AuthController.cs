@@ -16,7 +16,7 @@ using System.Text;
 namespace APIBasic.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -46,7 +46,7 @@ namespace APIBasic.Controllers
 
                 var token = new JwtSecurityToken(
                     issuer: _configuration["Jwt:Issuer"],
-                    audience: Enum.GetName(typeof(AudienceEnum), credentials.AudienceType)!.ToLower(),
+                    audience: credentials.AudienceName,
                     claims: claims,
                     expires: DateTime.Now.AddDays(30),
                     signingCredentials: creds);

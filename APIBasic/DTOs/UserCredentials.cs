@@ -13,8 +13,8 @@ namespace APIBasic.DTOs
         [MailValidation(ErrorMessage = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
         public string Password { get; set; } = null!;
 
-        [RegularExpression(@"(0|1)")]
-        public int AudienceType { get; set; } = (int)AudienceEnum.Web;
+        [RegularExpression(@"(mobile|browser)")]
+        public string AudienceName { get; set; } = Audience.Mobile;
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (Username == "111")
