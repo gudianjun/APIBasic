@@ -1,9 +1,11 @@
 ﻿using APIBasic.Configurations;
+using APIBasic.Data;
 using APIBasic.DTOs;
 using APIBasic.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -25,8 +27,10 @@ namespace APIBasic.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly APIConfig _apiConfig;
-        public SampleController(IConfiguration configuration, IOptionsMonitor<APIConfig> apiConfig)
+        private readonly MySqlDbContext _dbContext;
+        public SampleController(IConfiguration configuration, IOptionsMonitor<APIConfig> apiConfig, MySqlDbContext context)
         {
+            _dbContext = context;
             _apiConfig = apiConfig.CurrentValue;
             _configuration = configuration;
         }
@@ -154,17 +158,44 @@ namespace APIBasic.Controllers
         /// <param name="fileName"></param>
         /// <returns></returns>
         [HttpGet("download/{fileName}")]　
-        public IActionResult DownloadFile(string fileName)
+        public async Task<IActionResult> DownloadFile(string fileName)
         {
             var filePath = Path.Combine(_apiConfig.UploadPath, fileName);
 
             if (!System.IO.File.Exists(filePath))
             {
                 return NotFound(new { message = "File not found" });
-            }
-
-            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            } 
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
             return File(fileBytes, "application/octet-stream", fileName);
+        }
+
+        [HttpGet("items")]
+        public async Task<IActionResult> GetPagedItems([FromQuery] PagedRequest request)
+        {
+            //var query = _dbContext.Items.AsQueryable();
+
+            //// 排序
+            //if (!string.IsNullOrEmpty(request.SortField))
+            //{
+            //    query = request.SortDirection?.ToLower() == "desc"
+            //        ? query.OrderByDescending(e => EF.Property<object>(e, request.SortField))
+            //        : query.OrderBy(e => EF.Property<object>(e, request.SortField));
+            //}
+
+            //// 获取总记录数
+            //var totalRecords = await query.CountAsync();
+
+            //// 分页
+            //var items = await query
+            //    .Skip((request.PageNumber - 1) * request.PageSize)
+            //    .Take(request.PageSize)
+            //    .ToListAsync();
+
+            //// 创建分页响应
+            //var response = new PagedResponse<Item>(items, request.PageNumber, request.PageSize, totalRecords);
+
+            return Ok();
         }
     }
      

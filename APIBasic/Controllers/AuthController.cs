@@ -3,9 +3,11 @@
 using APIBasic.Data;
 using APIBasic.DTOs;
 using APIBasic.Enums;
+using APIBasic.Services.Interfaces;
 using APIBasic.Validations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
@@ -19,24 +21,29 @@ namespace APIBasic.Controllers
     [Route("api/v{version:apiVersion}/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        private readonly MySqlDbContext _context;
-        public AuthController(IConfiguration configuration, MySqlDbContext context)
+        private readonly ITopWindowService  _topWindowService;
+        private readonly IConfiguration _configuration; 
+        private readonly ILogger<AuthController> _logger;
+        private readonly IMemoryCache _memoryCache; 
+        public AuthController(IConfiguration configuration , ITopWindowService topWindowService
+            , ILogger<AuthController> logger, IMemoryCache memoryCache)
         {
-            _configuration = configuration;
-            _context = context;
+            _memoryCache = memoryCache;
+            _logger = logger;
+            _topWindowService = topWindowService;
+            _configuration = configuration; 
         }
 
-        [HttpPost("token")]
+        [HttpPost("login")]
         [AllowAnonymous]
-        public IActionResult GenerateToken([FromBody] UserCredentials credentials)
+        public IActionResult Login([FromBody] LoginRequest request)
         {
             // var albums = _context.Albums!.Select(a => a.Title).ToList();
             if (true)
             {
                 var claims = new[]
                 {
-                    new Claim(JwtRegisteredClaimNames.Sub, credentials.Username),
+                    new Claim(JwtRegisteredClaimNames.Sub, request.Username),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(ClaimTypes.Role, Roles.User)
                 };
@@ -46,7 +53,7 @@ namespace APIBasic.Controllers
 
                 var token = new JwtSecurityToken(
                     issuer: _configuration["Jwt:Issuer"],
-                    audience: credentials.AudienceName,
+                    audience: request.AudienceName,
                     claims: claims,
                     expires: DateTime.Now.AddDays(30),
                     signingCredentials: creds);
@@ -56,9 +63,14 @@ namespace APIBasic.Controllers
                 return response.Result();
             }
 
-            return (new ApiResponse<string>((int)HttpStatusCode.Unauthorized, null )).Result();
+            return (new ApiResponse<string>((int)HttpStatusCode.Unauthorized, null)).Result();
         }
-    }
 
-    
+        [HttpPost("logout")]
+        [Authorize]
+        public IActionResult Logout()
+        {
+            return (new ApiResponse<string>("Logout Successful")).Result();
+        } 
+    } 
 }

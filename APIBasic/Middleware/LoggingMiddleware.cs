@@ -25,10 +25,18 @@ namespace APIBasic.Middleware
                 requestId = Guid.NewGuid().ToString();
                 request.Headers.TryAdd("X-Request-ID", requestId);
             }
+            request.Headers["X-ClientId"] = "dev-id-1";
+
             var stopwatch = Stopwatch.StartNew();
             context.Response.Headers["X-Request-ID"] = requestId;
-            _logger.LogInformation($"Received {request.Method} request for {request.Path} Request ID: {requestId}");
+            // 获得真实的客户端IP地址
+            string remoteIpAddress = context.Connection.RemoteIpAddress?.ToString()?? "unknown";
+            // 获取客户端的域名
+            string clientHost = request.Headers["Host"].ToString();
+            string referer = request.Headers["Referer"].ToString();
 
+            _logger.LogInformation($"Received {request.Method} RemoteIp {remoteIpAddress} request for {request.Path} Request ID: {requestId}");
+            _logger.LogInformation($"Client Host: {clientHost}, Referer: {referer}");
             await _next(context);
 
             stopwatch.Stop();

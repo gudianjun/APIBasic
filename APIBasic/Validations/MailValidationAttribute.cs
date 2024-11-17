@@ -1,5 +1,4 @@
-﻿using APIBasic.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace APIBasic.Validations
 {

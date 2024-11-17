@@ -18,6 +18,14 @@ using Google.Protobuf.WellKnownTypes;
 using System.Net;
 using APIBasic.Configurations;
 using Microsoft.Extensions.DependencyInjection;
+using FluentValidation.AspNetCore;
+using FluentValidation;
+using AspNetCoreRateLimit;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using APIBasic.Services.Interfaces;
+using APIBasic.Repositories.Interfaces;
+using APIBasic.Repositories.Implementations;
+using APIBasic.Services.Implementations;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -34,7 +42,40 @@ builder.Services.AddDbContext<MySqlDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 // 配置APIConfig映射
 builder.Services.Configure<APIConfig>(builder.Configuration.GetSection("APIConfig"));
-
+// 添加健康检查服务
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("Database");
+// 响应压缩
+builder.Services.AddResponseCompression();
+// 添加复杂逻辑验证
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddFluentValidationAutoValidation().AddFluentValidationClientsideAdapters();
+// 添加速率限制服务
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+builder.Services.AddInMemoryRateLimiting();
+// 配置 CORS 策略
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+if(corsOrigins != null && corsOrigins.Contains("*"))
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowSpecificOrigin",
+            builder => builder.AllowAnyOrigin()
+                              .AllowAnyMethod()
+                              .AllowAnyHeader());
+    });
+}
+else
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowSpecificOrigin",
+            builder => builder.WithOrigins(corsOrigins!)
+                              .AllowAnyMethod()
+                              .AllowAnyHeader());
+    });
+}
 
 // 添加JWT身份验证服务
 builder.Services.AddAuthentication(options =>
@@ -132,7 +173,9 @@ builder.Services.AddControllers(options =>
 
     }; 
 }) ;
-
+// 注册服务
+builder.Services.AddScoped<ITopWindowService, TopWindowService>();
+builder.Services.AddScoped<ITopWindowRepository, TopWindowRepository>(); 
 
 
 builder.Services.AddApiVersioning(options =>
@@ -185,8 +228,17 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 app.UseMiddleware<LoggingMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
+// 使用健康检查中间件
 // Configure the HTTP request pipeline.
+app.UseHealthChecks("/health");
+// 响应压缩
+app.UseResponseCompression();
+// 使用速率限制中间件
+app.UseIpRateLimiting();
+// 使用 CORS 策略
+app.UseCors("AllowSpecificOrigin");
+
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -219,6 +271,7 @@ app.Use(async (context, next) =>
             401 => "Unauthorized",
             403 => "Forbidden",
             500 => "Internal server error",
+            405 => "Method Not Allowed",
             _ => "An error occurred"
         };
 
