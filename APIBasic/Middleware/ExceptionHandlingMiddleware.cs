@@ -4,6 +4,9 @@ using System.Net;
 
 namespace APIBasic.Middleware
 {
+    /// <summary>
+    /// 异常处理中间件
+    /// </summary>
     public class ExceptionHandlingMiddleware
     {
         private readonly RequestDelegate _next;
