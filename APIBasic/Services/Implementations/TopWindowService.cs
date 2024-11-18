@@ -22,10 +22,13 @@ namespace APIBasic.Services.Implementations
         private readonly IConfiguration _configuration; 
         private readonly ILogger<TopWindowService> _logger;
         private readonly IMemoryCache _memoryCache;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         public TopWindowService(IConfiguration configuration,  
             ITopWindowRepository topWindowRepository
-            , ILogger<TopWindowService> logger, IMemoryCache memoryCache)
+            , ILogger<TopWindowService> logger, IMemoryCache memoryCache,
+            IHttpContextAccessor httpContextAccessor)
         {
+            _httpContextAccessor = httpContextAccessor;
             _memoryCache = memoryCache;
             _logger = logger;
             _topWindowRepository = topWindowRepository;
@@ -80,6 +83,16 @@ namespace APIBasic.Services.Implementations
         
         public async Task LogoutAsync()
         {
+            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
+            if(claimsIdentity != null)
+            {
+                var userId = claimsIdentity.FindFirst(KeyName.USER_ID)?.Value;
+                var aud = claimsIdentity.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud)?.Value;
+                if (userId != null && aud!=null)
+                {
+                    await _topWindowRepository.SaveLoginInfoAsync(int.Parse(userId), aud, "");
+                }
+            }
             throw new NotImplementedException();
         }
         public async Task<ChangePasswordResponse> ChangePasswordAsync(string userId, ChangePasswordRequest request)

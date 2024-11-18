@@ -56,6 +56,8 @@ builder.Services.AddFluentValidationAutoValidation().AddFluentValidationClientsi
 builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 builder.Services.AddInMemoryRateLimiting();
+// 得到全局的上下文对象
+builder.Services.AddHttpContextAccessor();
 // 配置 CORS 策略
 var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 if(corsOrigins != null && corsOrigins.Contains("*"))
