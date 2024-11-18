@@ -6,9 +6,11 @@ namespace APIBasic.DTOs
 {
     public class LoginRequest
     {
-        [CustomValidation(typeof(BaseValidator), "ValidateName")]
+        [StringLength(50)]
         [Required(ErrorMessage = "Username is required")]
         public string Username { get; set; } = null!;
+
+        [StringLength(50)]
         [Required(ErrorMessage = "Username is required")] 
         public string Password { get; set; } = null!;
 

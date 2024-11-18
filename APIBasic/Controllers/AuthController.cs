@@ -36,40 +36,17 @@ namespace APIBasic.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public IActionResult Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            // var albums = _context.Albums!.Select(a => a.Title).ToList();
-            if (true)
-            {
-                var claims = new[]
-                {
-                    new Claim(JwtRegisteredClaimNames.Sub, request.Username),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim(ClaimTypes.Role, Roles.User)
-                };
-
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-                var token = new JwtSecurityToken(
-                    issuer: _configuration["Jwt:Issuer"],
-                    audience: request.AudienceName,
-                    claims: claims,
-                    expires: DateTime.Now.AddDays(30),
-                    signingCredentials: creds);
-                string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-                var response = new ApiResponse<object>(new { token = tokenString });
-
-                return response.Result();
-            }
-
-            return (new ApiResponse<string>((int)HttpStatusCode.Unauthorized, null)).Result();
+            var response = await _topWindowService.LoginAsync(request);
+            return response;
         }
 
         [HttpPost("logout")]
         [Authorize]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
+            await _topWindowService.LogoutAsync();
             return (new ApiResponse<string>("Logout Successful")).Result();
         } 
     } 

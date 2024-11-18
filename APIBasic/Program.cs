@@ -26,6 +26,8 @@ using APIBasic.Services.Interfaces;
 using APIBasic.Repositories.Interfaces;
 using APIBasic.Repositories.Implementations;
 using APIBasic.Services.Implementations;
+using Microsoft.Extensions.Caching.Memory;
+using APIBasic.Enums;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -110,12 +112,33 @@ builder.Services.AddAuthentication(options =>
         },
         OnTokenValidated = context =>
         {
-            // 令牌验证成功后执行自定义逻辑
-            var claimsIdentity = context.Principal?.Identity as ClaimsIdentity;
-            if (claimsIdentity != null)
+            // 通过依赖注入获取IMemoryCache实例
+            var memoryCache = context.HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
+
+            // 通过token中的用户id，session信息，判断内存中保存的是否一致
+            var userId = context.Principal?.FindFirstValue(KeyName.USER_ID);
+            var sessionId = context.Principal?.FindFirstValue(KeyName.SESSION_ID);
+            var aud = context.Principal?.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud);
+            if (userId == null || sessionId == null || aud == null)
             {
-            //    context.Fail("Unauthorized: User does not have the required role.");
+                context.Fail("Unauthorized: User authentication information error.");
             }
+            else
+            {
+                // 从内存中获取用户Token信息
+                if (!memoryCache.TryGetValue(int.Parse(userId), out UserTokenInfo? userTokenInfo))
+                {
+                    context.Fail("Unauthorized: The user session does not exist and needs to login again.");
+                }
+                else
+                {
+                    if((aud == Audience.Browser && sessionId != userTokenInfo!.BrowserSession)
+                    || (aud == Audience.Mobile && sessionId != userTokenInfo!.MobileSession))
+                    {
+                        context.Fail("Unauthorized: The Token has expired.");
+                    }
+                } 
+            } 
             return Task.CompletedTask;
         },
         OnAuthenticationFailed = context =>

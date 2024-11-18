@@ -14,16 +14,16 @@ namespace APIBasic.Controllers
     public class DesignsController : ControllerBase
     {
         private readonly ITopWindowService _topWindowService;
-        private readonly IConfiguration _configuration; 
+        private readonly IConfiguration _configuration;
         private readonly ILogger<DesignsController> _logger;
         private readonly IMemoryCache _memoryCache;
-        public DesignsController(IConfiguration configuration , ITopWindowService topWindowService
+        public DesignsController(IConfiguration configuration, ITopWindowService topWindowService
             , ILogger<DesignsController> logger, IMemoryCache memoryCache)
         {
             _memoryCache = memoryCache;
             _logger = logger;
             _topWindowService = topWindowService;
-            _configuration = configuration; 
+            _configuration = configuration;
         }
         /// <summary>
         /// 分类检索户型设计信息。
@@ -33,9 +33,9 @@ namespace APIBasic.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        [HttpGet] 
-        public async Task<IActionResult> GetTypeDesigns([FromBody] GetTypeDesignsRequest request )
-        { 
+        [HttpGet("type/{type}")]
+        public async Task<IActionResult> GetTypeDesigns(string type, [FromBody] GetTypeDesignsRequest request)
+        {
             return (new ApiResponse<GetTypeDesignsResponse>(null)).Result();
         }
         /// <summary>
@@ -44,9 +44,9 @@ namespace APIBasic.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        [HttpGet] 
+        [HttpGet("Designs")]
         public async Task<IActionResult> GetDesigns([FromBody] GetDesignsRequest request)
-        { 
+        {
             return (new ApiResponse<GetDesignsResponse>(null)).Result();
         }
 
@@ -55,10 +55,10 @@ namespace APIBasic.Controllers
         /// </summary>
         /// <param name="designId"></param>
         /// <returns></returns>
-        [HttpGet("{designId}")]
+        [HttpGet("details/{designId}")]
         [Authorize]
         public async Task<IActionResult> GetDesignDetails(int designId)
-        { 
+        {
             return (new ApiResponse<GetDesignDetailsResponse>(null)).Result();
         }
     }

@@ -1,8 +1,9 @@
 ﻿using APIBasic.Data;
 using APIBasic.DTOs;
+using APIBasic.Enums;
 using APIBasic.Models;
-using APIBasic.Repositories.Interfaces;
-using APIBasic.Services.Implementations;
+using APIBasic.Repositories.Interfaces; 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace APIBasic.Repositories.Implementations
@@ -13,8 +14,7 @@ namespace APIBasic.Repositories.Implementations
         private readonly MySqlDbContext _context;
         private readonly ILogger<TopWindowRepository> _logger;
         private readonly IMemoryCache _memoryCache;
-        public TopWindowRepository(IConfiguration configuration, MySqlDbContext context,
-            ITopWindowRepository topWindowRepository
+        public TopWindowRepository(IConfiguration configuration, MySqlDbContext context
             , ILogger<TopWindowRepository> logger, IMemoryCache memoryCache)
         {
             _memoryCache = memoryCache;
@@ -41,7 +41,12 @@ namespace APIBasic.Repositories.Implementations
         {
             throw new NotImplementedException();
         }
-
+        public async Task<User?> GetUserInfoForUserNameAsync(string userName)
+        { 
+            var rtn = await _context.Users.FirstOrDefaultAsync(x => x.UserName == userName);
+            // 通过UserName获取User表中的用户信息
+            return rtn;
+        }
         public Task<User?> GetUserByIdAsync(string userId)
         {
             throw new NotImplementedException();
@@ -52,11 +57,7 @@ namespace APIBasic.Repositories.Implementations
             throw new NotImplementedException();
         }
 
-        public Task SaveLoginInfoAsync(Logininfo logininfo)
-        {
-            throw new NotImplementedException();
-        }
-
+ 
         public Task SaveUserAsync(User user)
         {
             throw new NotImplementedException();
@@ -65,6 +66,26 @@ namespace APIBasic.Repositories.Implementations
         public Task UpdateUserAsync(User user)
         {
             throw new NotImplementedException();
+        }
+
+
+        public Task SaveLoginInfoAsync(int userId, string audience, string session)
+        {
+            if (!_memoryCache.TryGetValue(userId, out UserTokenInfo? userTokenInfo))
+            {
+                userTokenInfo = new UserTokenInfo();
+            } // 根据audience更新相应的Token值
+            if (audience == Audience.Browser)
+            {
+                userTokenInfo!.BrowserSession = session;
+            }
+            else if (audience == Audience.Mobile)
+            {
+                userTokenInfo!.MobileSession = session;
+            }
+            // 保存到内存中
+            _memoryCache.Set(userId, userTokenInfo);
+            return Task.CompletedTask;
         }
     }
 }

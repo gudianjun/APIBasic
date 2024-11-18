@@ -1,10 +1,12 @@
 ﻿using APIBasic.DTOs;
+using APIBasic.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace APIBasic.Services.Interfaces
 {
     public interface ITopWindowService
     {
-        Task<string> LoginAsync(LoginRequest request);
+        Task<IActionResult>  LoginAsync(LoginRequest request);
         Task LogoutAsync();
         Task<GetTypeDesignsResponse> GetTypeDesignsAsync(GetTypeDesignsRequest request);
         Task<GetDesignsResponse> GetDesignsAsync(GetDesignsRequest request);
@@ -13,5 +15,6 @@ namespace APIBasic.Services.Interfaces
         Task<GetUserInfoResponse> GetUserInfoAsync(string userId);
         Task<UpdateUserInfoResponse> UpdateUserInfoAsync(UpdateUserInfoRequest request);
         Task<ChangePasswordResponse> ChangePasswordAsync(string userId, ChangePasswordRequest request);
+         
     }
 }
