@@ -47,9 +47,18 @@ namespace APIBasic.Repositories.Implementations
             // 通过UserName获取User表中的用户信息
             return rtn;
         }
-        public Task<User?> GetUserByIdAsync(string userId)
+
+        public async Task<User?> GetUserInfoForMailAddressAsync(string mailAddress)
         {
-            throw new NotImplementedException();
+            var rtn = await _context.Users.FirstOrDefaultAsync(x => x.MailAddress == mailAddress);
+            // 通过UserName获取User表中的用户信息
+            return rtn;
+        }
+
+        public Task<User?> GetUserByIdAsync(uint userId)
+        {
+            var rtn = _context.Users.FirstOrDefaultAsync(x => x.UserId == userId);
+            return rtn;
         }
 
         public Task<User?> GetUserByUsernameAsync(string username)
@@ -63,9 +72,12 @@ namespace APIBasic.Repositories.Implementations
             throw new NotImplementedException();
         }
 
-        public Task UpdateUserAsync(User user)
+        public async Task<int> UpdateUserAsync(User user)
         {
-            throw new NotImplementedException();
+            // 更新User表中的用户信息
+            _context.Users.Update(user);
+            int count = await _context.SaveChangesAsync();
+            return count;
         }
 
 

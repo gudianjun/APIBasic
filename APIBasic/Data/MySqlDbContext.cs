@@ -25,6 +25,8 @@ public partial class MySqlDbContext : DbContext
 
     public virtual DbSet<CompanyAuthority> CompanyAuthorities { get; set; }
 
+    public virtual DbSet<FileManagement> FileManagements { get; set; }
+
     public virtual DbSet<FunctionList> FunctionLists { get; set; }
 
     public virtual DbSet<FunctionModule> FunctionModules { get; set; }
@@ -75,7 +77,7 @@ public partial class MySqlDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseMySql("server=localhost;port=3306;database=mydatabase;user=root;password=111111;allowpublickeyretrieval=True", Microsoft.EntityFrameworkCore.ServerVersion.Parse("9.1.0-mysql"));
+        => optionsBuilder.UseMySql("server=140.83.84.36;port=3306;database=mydatabase;user=root;password=111111;allowpublickeyretrieval=True;connect timeout=130", Microsoft.EntityFrameworkCore.ServerVersion.Parse("9.1.0-mysql"));
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -257,6 +259,23 @@ public partial class MySqlDbContext : DbContext
                 .HasColumnName("webaddr")
                 .UseCollation("utf8mb3_general_ci")
                 .HasCharSet("utf8mb3");
+        });
+
+        modelBuilder.Entity<FileManagement>(entity =>
+        {
+            entity.HasKey(e => e.FileId).HasName("PRIMARY");
+
+            entity.ToTable("FileManagement");
+
+            entity.Property(e => e.FileId).HasColumnName("FileID");
+            entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+            entity.Property(e => e.DeviceType).HasMaxLength(255);
+            entity.Property(e => e.FileFormat).HasMaxLength(255);
+            entity.Property(e => e.LastUpdatedTime).HasColumnType("datetime");
+            entity.Property(e => e.Remarks).HasColumnType("text");
+            entity.Property(e => e.ResourceName).HasMaxLength(255);
+            entity.Property(e => e.ResourceType).HasMaxLength(255);
+            entity.Property(e => e.UserId).HasColumnName("UserID");
         });
 
         modelBuilder.Entity<FunctionList>(entity =>
@@ -1587,6 +1606,7 @@ public partial class MySqlDbContext : DbContext
                 .HasDefaultValueSql("'0'")
                 .HasComment("0 企业  1：设计师  2：普通用户 11:超级用户")
                 .HasColumnName("accounttype");
+            entity.Property(e => e.Address).HasMaxLength(255);
             entity.Property(e => e.Administrator)
                 .HasColumnType("text")
                 .HasColumnName("administrator");
@@ -1594,12 +1614,14 @@ public partial class MySqlDbContext : DbContext
                 .HasColumnType("text")
                 .UseCollation("utf8mb3_general_ci")
                 .HasCharSet("utf8mb3");
+            entity.Property(e => e.AvatarIcon).HasMaxLength(255);
             entity.Property(e => e.CompanyId)
                 .HasMaxLength(64)
                 .HasDefaultValueSql("''")
                 .HasColumnName("CompanyID")
                 .UseCollation("utf8mb3_general_ci")
                 .HasCharSet("utf8mb3");
+            entity.Property(e => e.CompanyName).HasMaxLength(255);
             entity.Property(e => e.Creater)
                 .HasColumnType("text")
                 .HasColumnName("creater")
@@ -1616,6 +1638,7 @@ public partial class MySqlDbContext : DbContext
                 .HasColumnName("createtime")
                 .UseCollation("utf8mb3_general_ci")
                 .HasCharSet("utf8mb3");
+            entity.Property(e => e.EmailVerificationCode).HasMaxLength(255);
             entity.Property(e => e.EnableTime)
                 .HasColumnType("text")
                 .UseCollation("utf8mb3_general_ci")
@@ -1637,6 +1660,7 @@ public partial class MySqlDbContext : DbContext
             entity.Property(e => e.Lasttime)
                 .HasColumnType("datetime")
                 .HasColumnName("lasttime");
+            entity.Property(e => e.MailAddress).HasMaxLength(255);
             entity.Property(e => e.MasterAuthorization)
                 .HasMaxLength(1)
                 .HasDefaultValueSql("'0'")
@@ -1644,6 +1668,7 @@ public partial class MySqlDbContext : DbContext
                 .HasColumnName("master_authorization")
                 .UseCollation("utf8mb3_general_ci")
                 .HasCharSet("utf8mb3");
+            entity.Property(e => e.Name).HasMaxLength(255);
             entity.Property(e => e.Password)
                 .HasColumnType("text")
                 .UseCollation("utf8mb3_general_ci")

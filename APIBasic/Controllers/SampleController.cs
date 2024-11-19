@@ -2,12 +2,14 @@
 using APIBasic.Data;
 using APIBasic.DTOs;
 using APIBasic.Enums;
+using APIBasic.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -48,7 +50,7 @@ namespace APIBasic.Controllers
         /// <returns></returns>
         [HttpPost("login")]
         [AllowAnonymous]
-        public IActionResult Login([FromBody] UserCredentials credentials)
+        public ActionResult<object> Login([FromBody] UserCredentials credentials)
         {
             var user = Users.FirstOrDefault(u => u.Username == credentials.Username && u.Password == credentials.Password);
             if (user == null)
@@ -85,7 +87,7 @@ namespace APIBasic.Controllers
         /// <returns></returns>
         [HttpGet("admin")]
         [Authorize(Roles = "Admin")]
-        public IActionResult AdminEndpoint()
+        public ActionResult<string> AdminEndpoint()
         {
             return (new ApiResponse<string>("This is an admin endpoint")).Result(); 
         }
@@ -95,7 +97,7 @@ namespace APIBasic.Controllers
         /// <returns></returns>
         [HttpGet("user")]
         [Authorize(Roles = "User")]
-        public IActionResult UserEndpoint()
+        public ActionResult<string> UserEndpoint()
         {
             return (new ApiResponse<string>("This is a user endpoint")).Result(); 
         }
@@ -129,7 +131,7 @@ namespace APIBasic.Controllers
         /// <returns></returns>
         [HttpPost("uploads")]
         [AllowAnonymous]
-        public async Task<IActionResult> UploadFiles(List<IFormFile> files)
+        public async Task<ActionResult<string>> UploadFiles(List<IFormFile> files)
         {
             if (files == null || files.Count == 0)
             {
@@ -197,6 +199,13 @@ namespace APIBasic.Controllers
 
             return Ok();
         }
+
+        [HttpGet("HashPassword/{password}")]
+        public async Task<ActionResult<string>> HashPassword([Required] string password)
+        {
+            await Task.CompletedTask;
+            return (new ApiResponse<string>(StringHelper.HashPassword(password))).Result();
+        } 
     }
-     
+
 }

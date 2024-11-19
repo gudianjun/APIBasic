@@ -36,7 +36,7 @@ namespace APIBasic.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
         {
             var response = await _topWindowService.LoginAsync(request);
             return response;
@@ -44,10 +44,22 @@ namespace APIBasic.Controllers
 
         [HttpPost("logout")]
         [Authorize]
-        public async Task<IActionResult> Logout()
+        public async Task<ActionResult<string>> Logout()
         {
             await _topWindowService.LogoutAsync();
             return (new ApiResponse<string>("Logout Successful")).Result();
-        } 
+        }
+        /// <summary>
+        /// Refresh token
+        /// 当访问token过期时，使用refresh token来获取新的token
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("refresh")]
+        [Authorize]
+        public async Task<ActionResult<LoginResponse>> Refresh()
+        {
+            var response = await _topWindowService.RefreshAsync();
+            return response;
+        }
     } 
 }

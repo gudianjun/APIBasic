@@ -34,7 +34,7 @@ namespace APIBasic.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpGet("type/{type}")]
-        public async Task<IActionResult> GetTypeDesigns(string type, [FromBody] GetTypeDesignsRequest request)
+        public async Task<ActionResult<GetTypeDesignsResponse>> GetTypeDesigns(string type, [FromBody] GetTypeDesignsRequest request)
         {
             return (new ApiResponse<GetTypeDesignsResponse>(null)).Result();
         }
@@ -45,7 +45,7 @@ namespace APIBasic.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpGet("Designs")]
-        public async Task<IActionResult> GetDesigns([FromBody] GetDesignsRequest request)
+        public async Task<ActionResult<GetDesignsResponse>> GetDesigns([FromBody] GetDesignsRequest request)
         {
             return (new ApiResponse<GetDesignsResponse>(null)).Result();
         }
@@ -57,7 +57,7 @@ namespace APIBasic.Controllers
         /// <returns></returns>
         [HttpGet("details/{designId}")]
         [Authorize]
-        public async Task<IActionResult> GetDesignDetails(int designId)
+        public async Task<ActionResult<GetDesignDetailsResponse>> GetDesignDetails(int designId)
         {
             return (new ApiResponse<GetDesignDetailsResponse>(null)).Result();
         }

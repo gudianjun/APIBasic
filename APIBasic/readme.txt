@@ -2,7 +2,7 @@
 安装Ef数据库工具
 dotnet tool install --global dotnet-ef
  
-dotnet ef dbcontext scaffold "Server=localhost;Port=3306;Database=mydatabase;User=root;Password=111111;AllowPublicKeyRetrieval=True;" Pomelo.EntityFrameworkCore.MySql -o ./Models --context-dir ./Data -c MySqlDbContext --force
+dotnet ef dbcontext scaffold "Server=140.83.84.36;Port=3306;Database=mydatabase;User=root;Password=111111;AllowPublicKeyRetrieval=True;;Connect Timeout=130;" Pomelo.EntityFrameworkCore.MySql -o ./Models --context-dir ./Data -c MySqlDbContext --force
 
 
 发布docker
@@ -35,3 +35,32 @@ http://localhost:5049/health
 15，返回值定义在ApiResponse中。
 15，自定义字段验证错误信息，查看InvalidModelStateResponseFactory
  
+
+ALTER TABLE `user`
+ADD COLUMN `Address` VARCHAR(255) NULL,
+ADD COLUMN `Name` VARCHAR(255) NOT NULL,
+ADD COLUMN `CompanyName` VARCHAR(255) NULL, 
+ADD COLUMN `EmailVerificationCode` VARCHAR(255) NULL,
+ADD COLUMN `AvatarIcon` VARCHAR(255) NULL,
+ADD COLUMN `MailAddress` VARCHAR(255) NULL,
+
+ALTER TABLE `user`
+MODIFY COLUMN `Name` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+MODIFY COLUMN `Address` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+MODIFY COLUMN `CompanyName` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+
+ CREATE TABLE `FileManagement` (
+    `FileID` VARCHAR(255) NOT NULL PRIMARY KEY,
+    `CurrentVersion` int NOT NULL,
+    `ResourceType` VARCHAR(255) NOT NULL,
+    `ResourceName` VARCHAR(255) NOT NULL,
+    `DeviceType` VARCHAR(255) NOT NULL,
+    `UserID` int unsigned,
+    `FileSize` BIGINT,
+    `FileFormat` VARCHAR(255),
+    `LastUpdatedTime` DATETIME,
+    `CreatedTime` DATETIME NOT NULL,
+    `FileContent` LONGTEXT NOT NULL,
+    `Remarks` TEXT
+);

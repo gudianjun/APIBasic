@@ -11,9 +11,10 @@ namespace APIBasic.Repositories.Interfaces
         Task<GetDesignsResponse> GetDesignsAsync(GetDesignsRequest request);
         Task<GetDesignDetailsResponse> GetDesignDetailsAsync(int designId);
         Task<User?> GetUserInfoForUserNameAsync(string userName);
-        Task<User?> GetUserByIdAsync(string userId);
+        Task<User?> GetUserInfoForMailAddressAsync(string mailAddress);
+        Task<User?> GetUserByIdAsync(uint userId);
         Task SaveUserAsync(User user);
-        Task UpdateUserAsync(User user);
+        Task<int> UpdateUserAsync(User user);
         Task ChangePasswordAsync(string userId, string newPassword);
 
         Task SaveLoginInfoAsync(int userId, string audience, string token);

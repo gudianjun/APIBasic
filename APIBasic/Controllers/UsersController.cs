@@ -30,14 +30,14 @@ namespace APIBasic.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterRequest request)
+        public async Task<ActionResult<RegisterResponse>> Register(RegisterRequest request)
         {
             // 实现注册逻辑
             return (new ApiResponse<RegisterResponse>(null)).Result();
         }
 
         [HttpGet] 
-        public async Task<IActionResult> GetUserInfo()
+        public async Task<ActionResult<GetUserInfoResponse>> GetUserInfo()
         {
             // 实现用户信息检索逻辑
             return (new ApiResponse<GetUserInfoResponse>(null)).Result(); 
@@ -45,18 +45,20 @@ namespace APIBasic.Controllers
 
         [HttpPut]
         [Authorize]
-        public async Task<IActionResult> UpdateUserInfo([FromBody]  UpdateUserInfoRequest request)
+        public async Task<ActionResult<UpdateUserInfoResponse>> UpdateUserInfo([FromBody]  UpdateUserInfoRequest request)
         {
+            var response = await _topWindowService.UpdateUserInfoAsync(request);
             // 实现用户信息修改逻辑
-            return (new ApiResponse<UpdateUserInfoResponse>(null)).Result();
+            return response;
         }
 
         [HttpPut("password")]
         [Authorize]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        public async Task<ActionResult<ChangePasswordResponse>> ChangePassword([FromBody] ChangePasswordRequest request)
         {
+            var resopnse = await _topWindowService.ChangePasswordAsync(request);
             // 实现修改密码逻辑
-            return (new ApiResponse<ChangePasswordResponse>(null)).Result();
+            return resopnse;
         }
     }
 }

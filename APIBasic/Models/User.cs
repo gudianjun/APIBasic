@@ -66,4 +66,16 @@ public partial class User
     public string? HousetypeCheckAuthorization { get; set; }
 
     public string? Createtime { get; set; }
+
+    public string? Address { get; set; }
+
+    public string Name { get; set; } = null!;
+
+    public string? CompanyName { get; set; }
+
+    public string? EmailVerificationCode { get; set; }
+
+    public string? AvatarIcon { get; set; }
+
+    public string? MailAddress { get; set; }
 }

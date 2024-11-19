@@ -58,7 +58,7 @@ namespace APIBasic.DTOs
             Message = message;
             Data = data;
         }
-        public IActionResult Result()
+        public ActionResult<T> Result()
         {
             return new CustomActionResult(StatusCode, this);
         }

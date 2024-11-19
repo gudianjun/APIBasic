@@ -28,6 +28,8 @@ using APIBasic.Repositories.Implementations;
 using APIBasic.Services.Implementations;
 using Microsoft.Extensions.Caching.Memory;
 using APIBasic.Enums;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.RegularExpressions;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -95,6 +97,7 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
+        ClockSkew = TimeSpan.Zero,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudiences = builder.Configuration.GetSection("Jwt:Audiences").Get<string[]>(),
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
@@ -121,23 +124,50 @@ builder.Services.AddAuthentication(options =>
             var userId = context.Principal?.FindFirstValue(KeyName.USER_ID);
             var sessionId = context.Principal?.FindFirstValue(KeyName.SESSION_ID);
             var aud = context.Principal?.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud);
-            if (userId == null || sessionId == null || aud == null)
+            var tokenType = context.Principal?.FindFirstValue(TokenType.TOKEN_TYPE_TITLE);
+            if (userId == null || sessionId == null || aud == null || tokenType == null)
             {
                 context.Fail("Unauthorized: User authentication information error.");
             }
             else
             {
-                // 从内存中获取用户Token信息
-                if (!memoryCache.TryGetValue(int.Parse(userId), out UserTokenInfo? userTokenInfo))
+                bool isRefresh = false;
+                var requestPath = context.HttpContext.Request.Path.Value; // 获取完整路径字符串
+                if(requestPath != null)
                 {
-                    context.Fail("Unauthorized: The user session does not exist and needs to login again.");
+                    // 正则表达式，判断
+                    var regex = new Regex(@"^/api/v\d+/auth/refresh$", RegexOptions.IgnoreCase);
+                    var match = regex.Match(requestPath);
+                    if (match.Success)
+                    {
+                        isRefresh = true;
+                    }
+                }
+                if (tokenType == TokenType.RefreshToken) 
+                { 
+                    if(!isRefresh)
+                    { 
+                        context.Fail("Unauthorized: Wrong token type.");
+                    }
                 }
                 else
                 {
-                    if((aud == Audience.Browser && sessionId != userTokenInfo!.BrowserSession)
-                    || (aud == Audience.Mobile && sessionId != userTokenInfo!.MobileSession))
+                    if (isRefresh)
                     {
-                        context.Fail("Unauthorized: The Token has expired.");
+                        context.Fail("Unauthorized: Wrong token type.");
+                    }
+                    // 从内存中获取用户Token信息
+                    if (!memoryCache.TryGetValue(int.Parse(userId), out UserTokenInfo? userTokenInfo))
+                    {
+                        context.Fail("Unauthorized: The user session does not exist and needs to login again.");
+                    }
+                    else
+                    {
+                        if ((aud == Audience.Browser && sessionId != userTokenInfo!.BrowserSession)
+                        || (aud == Audience.Mobile && sessionId != userTokenInfo!.MobileSession))
+                        {
+                            context.Fail("Unauthorized: The Token has expired.");
+                        }
                     }
                 } 
             } 
@@ -148,8 +178,16 @@ builder.Services.AddAuthentication(options =>
             if (!context.Response.HasStarted)
             {
                 context.Response.ContentType = "application/json";
-                context.Response.StatusCode = 401;
-                var response = new ApiResponse<string>(401, "Unauthorized", context.Exception.Message);
+                if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                {
+                    context.Response.StatusCode = 440; 
+                }
+                else
+                {
+                    context.Response.StatusCode = 401;
+                }
+ 
+                var response = new ApiResponse<string>(context.Response.StatusCode, "Unauthorized", context.Exception.Message);
                 return context.Response.WriteAsJsonAsync(response);
             }
             return Task.CompletedTask;
@@ -194,8 +232,8 @@ builder.Services.AddControllers(options =>
             Field = e.Key,
             Error = e.Value?.Errors.First().ErrorMessage
         }).ToList();
-        return (new ApiResponse<object>(HttpStatusCode.UnprocessableEntity, "Validation Failed!", errors)).Result();
-
+        ActionResult<object> response = (new ApiResponse<object>(HttpStatusCode.UnprocessableEntity, "Validation Failed!", errors)).Result();
+        return response.Result!;
     }; 
 }) ;
 // 注册服务
