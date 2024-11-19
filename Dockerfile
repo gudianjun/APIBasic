@@ -26,6 +26,8 @@ RUN dotnet publish "./APIBasic.csproj" -c $BUILD_CONFIGURATION -o /app/publish /
 # このステージは、運用環境または VS から通常モードで実行している場合に使用されます (デバッグ構成を使用しない場合の既定)
 FROM base AS final
 WORKDIR /app
+# 切换到root用户
+USER root
 # 创建上传文件夹并设置权限
 RUN mkdir -p /app/upload && chmod -R 777 /app/upload
 
