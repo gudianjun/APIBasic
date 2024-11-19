@@ -12,6 +12,7 @@ docker run -d -p 8080:8080 -p 8081:8081 --name apibasic-container apibasic-image
 导入数据
 1,拷贝render.sql到容器
 2，进入容器找到文件，并执行一下命令
+ docker exec -it mysql-container /bin/bash
 mysql -h localhost -u root -p --default-character-set=utf8 mydatabase < render.sql
 
 API服务器功能描述
