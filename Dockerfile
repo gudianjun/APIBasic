@@ -30,6 +30,8 @@ WORKDIR /app
 USER root
 # 创建上传文件夹并设置权限
 RUN mkdir -p /app/upload && chmod -R 777 /app/upload
+# 设置环境变量
+ENV ASPNETCORE_ENVIRONMENT=Development
 
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "APIBasic.dll"]
