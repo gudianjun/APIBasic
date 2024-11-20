@@ -1,5 +1,5 @@
-﻿using APIBasic.Controllers;
-using APIBasic.Data;
+﻿using APIBasic.Configurations;
+
 using APIBasic.DTOs;
 using APIBasic.Enums;
 using APIBasic.Models;
@@ -7,17 +7,19 @@ using APIBasic.Repositories.Interfaces;
 using APIBasic.Services.Interfaces;
 using APIBasic.Utilities;
 using APIBasic.Validations;
-using Google.Protobuf.Reflection;
+using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Query;
+
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Linq;
-using Org.BouncyCastle.Asn1.Ocsp;
+using Microsoft.Extensions.Options;
+
+using MimeKit;
+
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
-using System.Text;
+
 
 namespace APIBasic.Services.Implementations
 {
@@ -28,16 +30,19 @@ namespace APIBasic.Services.Implementations
         private readonly ILogger<TopWindowService> _logger;
         private readonly IMemoryCache _memoryCache;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly APIConfig _apiConfig;
         public TopWindowService(IConfiguration configuration,
             ITopWindowRepository topWindowRepository
             , ILogger<TopWindowService> logger, IMemoryCache memoryCache,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor
+            , IOptionsMonitor<APIConfig> apiConfig)
         {
             _httpContextAccessor = httpContextAccessor;
             _memoryCache = memoryCache;
             _logger = logger;
             _topWindowRepository = topWindowRepository;
             _configuration = configuration;
+            _apiConfig = apiConfig.CurrentValue;
         }
 
 
@@ -75,7 +80,7 @@ namespace APIBasic.Services.Implementations
                         , _configuration["Jwt:Issuer"] ?? "issuer"
                         , request.AudienceName
                         , TokenType.AccessToken
-                        , DateTime.Now.AddMinutes(15));
+                        , DateTime.Now.AddMinutes(_apiConfig.AccessTokenExpiresTime));
                     string refreshToken = StringHelper.CreateToken(session, user.UserId.ToString()
                        , request.Username
                        , _configuration["Jwt:Key"]!
@@ -95,7 +100,7 @@ namespace APIBasic.Services.Implementations
                             Address = user.Address,
                             AvatarIcon = user.AvatarIcon,
                             CompanyName = user.CompanyName,
-                            Name = user.Name
+                            Name = user.Name!
                         }
                     });
                     return response.Result();
@@ -200,20 +205,8 @@ namespace APIBasic.Services.Implementations
             throw new NotImplementedException("Not logged in or verification information is lost");
         }
 
-        public async Task<GetDesignDetailsResponse> GetDesignDetailsAsync(int designId)
-        {
-            throw new NotImplementedException();
-        }
 
-        public async Task<GetDesignsResponse> GetDesignsAsync(GetDesignsRequest request)
-        {
-            throw new NotImplementedException();
-        }
 
-        public async Task<GetTypeDesignsResponse> GetTypeDesignsAsync(GetTypeDesignsRequest request)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task<GetUserInfoResponse> GetUserInfoAsync(string userId)
         {
@@ -236,8 +229,81 @@ namespace APIBasic.Services.Implementations
             user!.CompanyName = request.CompanyName;
             user!.Address = request.Address;
             user!.AvatarIcon = request.AvatarIcon;
+            user!.Tel = request.Tel;
             await _topWindowRepository.UpdateUserAsync(user);
             return new ApiResponse<UpdateUserInfoResponse>(null).Result();
+        }
+        // 文件相关
+        public async Task<ActionResult<GetFilesResponse>> GetFilesAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<ActionResult<DownloadFileResponse>> DownloadFileAsync([Required] string fileId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<ActionResult<CreateFileResponse>> CreateFileAsync([FromBody] CreateFileRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<ActionResult<DeleteFileResponse>> DeleteFileAsync(string fileId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<ActionResult<UpdateFileResponse>> UpdateFileAsync([Required] string fileId, [FromBody] UpdateFileRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<ActionResult<SendResetPasswordCodeResponse>> SendResetPasswordCodeAsync(SendResetPasswordCodeRequest request)
+        {
+            var user = await _topWindowRepository.GetUserInfoForMailAddressAsync(request.Email);
+            if(user != null)
+            {
+                string toEmail = request.Email;
+                // 生成随机5位数字验证码
+                Random random = new Random();
+                int code = random.Next(10000, 99999);
+                _topWindowRepository.SaveResetPasswordCode(toEmail, code.ToString());
+
+                string message = $"Your password reset code is: {code}";
+                string subject = "Password Reset Code";
+                var emailMessage = new MimeMessage();
+                emailMessage.From.Add(new MailboxAddress(_apiConfig.MailYourName, _apiConfig.SmtpUser));
+                emailMessage.To.Add(new MailboxAddress("", toEmail));
+                emailMessage.Subject = subject;
+                emailMessage.Body = new TextPart("plain") { Text = message };
+                await StringHelper.SendEmailAsync(toEmail, subject, _apiConfig, emailMessage);
+            }
+            return new ApiResponse<SendResetPasswordCodeResponse>(HttpStatusCode.OK, 
+                "The verification code has been sent to the specified email address", null).Result();
+        }
+
+        public async Task<ActionResult<CodeResetPasswordResponse>> CodeResetPasswordAsync(CodeResetPasswordRequest request)
+        {
+            string code = _topWindowRepository.LoadResetPasswordCode(request.Email);
+            if(code == request.ResetCode)
+            {
+                var user = await _topWindowRepository.GetUserInfoForMailAddressAsync(request.Email);
+                if (user != null)
+                {
+                    user.Password = StringHelper.HashPassword(request.NewPassword);
+                    await _topWindowRepository.UpdateUserAsync(user);
+                    return new ApiResponse<CodeResetPasswordResponse>(null).Result();
+                }
+                else
+                {
+                    return new ApiResponse<CodeResetPasswordResponse>(HttpStatusCode.NotFound, "User not found", null).Result();
+                }
+            }
+            else
+            {
+                return new ApiResponse<CodeResetPasswordResponse>(HttpStatusCode.NotFound, "Verification code error", null).Result();
+            } 
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace APIBasic.DTOs
 {
-    public class GetDesignsResponse
+    public class CreateFileResponse
     {
     }
 }

@@ -10,7 +10,7 @@ namespace APIBasic.DTOs
         [Required(ErrorMessage = "Username is required")]
         public string Username { get; set; } = null!;
         [Required(ErrorMessage = "Username is required")]
-        [MailValidation(ErrorMessage = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
+        [MailValidation(ErrorMessage = "Not a valid email address")]
         public string Password { get; set; } = null!;
 
         [RegularExpression(@"(mobile|browser)")]

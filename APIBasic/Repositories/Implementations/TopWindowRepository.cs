@@ -9,7 +9,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace APIBasic.Repositories.Implementations
 {
     public class TopWindowRepository : ITopWindowRepository
-    { 
+    {
         private readonly IConfiguration _configuration;
         private readonly MySqlDbContext _context;
         private readonly ILogger<TopWindowRepository> _logger;
@@ -18,7 +18,7 @@ namespace APIBasic.Repositories.Implementations
             , ILogger<TopWindowRepository> logger, IMemoryCache memoryCache)
         {
             _memoryCache = memoryCache;
-            _logger = logger; 
+            _logger = logger;
             _configuration = configuration;
             _context = context;
         }
@@ -27,22 +27,9 @@ namespace APIBasic.Repositories.Implementations
             throw new NotImplementedException();
         }
 
-        public Task<GetDesignDetailsResponse> GetDesignDetailsAsync(int designId)
-        {
-            throw new NotImplementedException();
-        }
 
-        public Task<GetDesignsResponse> GetDesignsAsync(GetDesignsRequest request)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<IEnumerable<GetTypeDesignsResponse>> GetTypeDesignsAsync(GetTypeDesignsRequest request)
-        {
-            throw new NotImplementedException();
-        }
         public async Task<User?> GetUserInfoForUserNameAsync(string userName)
-        { 
+        {
             var rtn = await _context.Users.FirstOrDefaultAsync(x => x.UserName == userName);
             // 通过UserName获取User表中的用户信息
             return rtn;
@@ -66,7 +53,7 @@ namespace APIBasic.Repositories.Implementations
             throw new NotImplementedException();
         }
 
- 
+
         public Task SaveUserAsync(User user)
         {
             throw new NotImplementedException();
@@ -98,6 +85,25 @@ namespace APIBasic.Repositories.Implementations
             // 保存到内存中
             _memoryCache.Set(userId, userTokenInfo);
             return Task.CompletedTask;
+        }
+
+
+        public void SaveResetPasswordCode(string email, string code)
+        {
+            // 保存验证码到内存中， 10分钟有效
+            _memoryCache.Set(email, code.ToString(), TimeSpan.FromMinutes(10));
+        }
+        public string LoadResetPasswordCode(string email)
+        {
+            // 从内存中获取验证码
+            if (_memoryCache.TryGetValue(email, out string? code))
+            {
+                return code!;
+            }
+            else
+            {
+                return string.Empty;
+            }
         }
     }
 }

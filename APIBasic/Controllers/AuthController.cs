@@ -41,7 +41,10 @@ namespace APIBasic.Controllers
             var response = await _topWindowService.LoginAsync(request);
             return response;
         }
-
+        /// <summary>
+        /// Logout
+        /// </summary>
+        /// <returns></returns>
         [HttpPost("logout")]
         [Authorize]
         public async Task<ActionResult<string>> Logout()

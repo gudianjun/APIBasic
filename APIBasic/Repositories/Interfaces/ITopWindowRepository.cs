@@ -6,10 +6,7 @@ namespace APIBasic.Repositories.Interfaces
     public interface ITopWindowRepository
     {
         Task<User?> GetUserByUsernameAsync(string username);
- 
-        Task<IEnumerable<GetTypeDesignsResponse>> GetTypeDesignsAsync(GetTypeDesignsRequest request);
-        Task<GetDesignsResponse> GetDesignsAsync(GetDesignsRequest request);
-        Task<GetDesignDetailsResponse> GetDesignDetailsAsync(int designId);
+  
         Task<User?> GetUserInfoForUserNameAsync(string userName);
         Task<User?> GetUserInfoForMailAddressAsync(string mailAddress);
         Task<User?> GetUserByIdAsync(uint userId);
@@ -18,5 +15,8 @@ namespace APIBasic.Repositories.Interfaces
         Task ChangePasswordAsync(string userId, string newPassword);
 
         Task SaveLoginInfoAsync(int userId, string audience, string token);
+
+        void SaveResetPasswordCode(string email, string code);
+        string LoadResetPasswordCode(string email);
     }
 }

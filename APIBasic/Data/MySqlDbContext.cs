@@ -1606,7 +1606,10 @@ public partial class MySqlDbContext : DbContext
                 .HasDefaultValueSql("'0'")
                 .HasComment("0 企业  1：设计师  2：普通用户 11:超级用户")
                 .HasColumnName("accounttype");
-            entity.Property(e => e.Address).HasMaxLength(255);
+            entity.Property(e => e.Address)
+                .HasMaxLength(255)
+                .UseCollation("utf8mb4_general_ci")
+                .HasCharSet("utf8mb4");
             entity.Property(e => e.Administrator)
                 .HasColumnType("text")
                 .HasColumnName("administrator");
@@ -1614,14 +1617,17 @@ public partial class MySqlDbContext : DbContext
                 .HasColumnType("text")
                 .UseCollation("utf8mb3_general_ci")
                 .HasCharSet("utf8mb3");
-            entity.Property(e => e.AvatarIcon).HasMaxLength(255);
+            entity.Property(e => e.AvatarIcon).HasColumnType("text");
             entity.Property(e => e.CompanyId)
                 .HasMaxLength(64)
                 .HasDefaultValueSql("''")
                 .HasColumnName("CompanyID")
                 .UseCollation("utf8mb3_general_ci")
                 .HasCharSet("utf8mb3");
-            entity.Property(e => e.CompanyName).HasMaxLength(255);
+            entity.Property(e => e.CompanyName)
+                .HasMaxLength(255)
+                .UseCollation("utf8mb4_general_ci")
+                .HasCharSet("utf8mb4");
             entity.Property(e => e.Creater)
                 .HasColumnType("text")
                 .HasColumnName("creater")
@@ -1668,7 +1674,10 @@ public partial class MySqlDbContext : DbContext
                 .HasColumnName("master_authorization")
                 .UseCollation("utf8mb3_general_ci")
                 .HasCharSet("utf8mb3");
-            entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .UseCollation("utf8mb4_general_ci")
+                .HasCharSet("utf8mb4");
             entity.Property(e => e.Password)
                 .HasColumnType("text")
                 .UseCollation("utf8mb3_general_ci")

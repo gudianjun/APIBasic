@@ -14,5 +14,8 @@ namespace APIBasic.DTOs
         public string? CompanyName { get; set; }
         [StringLength(50)]
         public string? AvatarIcon { get; set; }
+
+        [StringLength(50)]
+        public string? Tel { get; set; }
     }
 }

@@ -1,7 +1,10 @@
-﻿using APIBasic.Enums;
+﻿using APIBasic.Configurations;
+using APIBasic.Enums;
 using APIBasic.Models;
 using BCrypt.Net;
+using MailKit.Net.Smtp;
 using Microsoft.IdentityModel.Tokens;
+using MimeKit;
 using MySqlX.XDevAPI;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System.IdentityModel.Tokens.Jwt;
@@ -46,6 +49,37 @@ namespace APIBasic.Utilities
                 signingCredentials: creds);
             string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
             return tokenString;
+        }
+
+        /// <summary>
+        /// 发送邮件
+        /// </summary>
+        /// <param name="to">目标邮件地址</param> 
+        /// <param name="sub">标题</param>
+        /// <param name="yourName">标记发送者名</param>
+        /// <param name="aPIConfig">api配置信息</param>
+        /// <param name="mimeMessage">发送消息对象</param>
+        /// <returns></returns>
+        public static async Task SendEmailAsync(string to,
+            string sub,  
+            APIConfig aPIConfig, MimeMessage mimeMessage)
+        {
+            string toEmail = to; 
+            string subject = sub;
+            string _smtpServer = aPIConfig.SmtpServer;
+            int _smtpPort = aPIConfig.SmtpPort;
+            string _smtpUser = aPIConfig.SmtpUser;
+            string _smtpPass = aPIConfig.SmtpPassword; // 使用应用专用密码
+            var emailMessage = mimeMessage;
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_smtpServer, _smtpPort, MailKit.Security.SecureSocketOptions.StartTls);
+                client.Authenticate(_smtpUser, _smtpPass);
+
+                await client.SendAsync(emailMessage);
+                client.Disconnect(true);
+            }
         }
     }
 }
