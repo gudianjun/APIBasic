@@ -33,8 +33,8 @@ http://localhost:5049/health
 13，系统支持角色验证，角色名称配置在Roles中。
 14，客户端请求时，需要区分设备，请使用Audience中的字符串进行设定。
 15，返回值定义在ApiResponse中。
-15，自定义字段验证错误信息，查看InvalidModelStateResponseFactory
- 
+16，自定义字段验证错误信息，查看InvalidModelStateResponseFactory
+17，增加自动对象映射功能，查看AutoMapperProfile
 
 ALTER TABLE `user`
 ADD COLUMN `Address` VARCHAR(255) NULL,
@@ -43,14 +43,14 @@ ADD COLUMN `CompanyName` VARCHAR(255) NULL,
 ADD COLUMN `EmailVerificationCode` VARCHAR(255) NULL,
 ADD COLUMN `AvatarIcon` TEXT NULL,
 ADD COLUMN `MailAddress` VARCHAR(255) NULL,
- 
+ADD COLUMN `Zip` VARCHAR(10) NULL, 
 
 ALTER TABLE `user`
 MODIFY COLUMN `Name` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
 MODIFY COLUMN `Address` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 MODIFY COLUMN `CompanyName` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-
-
+ALTER TABLE `user`
+ADD COLUMN `Zip` VARCHAR(10) NULL, 
  CREATE TABLE `FileManagement` (
     `FileID` VARCHAR(255) NOT NULL PRIMARY KEY,
     `CurrentVersion` int NOT NULL,

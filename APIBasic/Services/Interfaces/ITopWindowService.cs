@@ -10,7 +10,7 @@ namespace APIBasic.Services.Interfaces
         Task<ActionResult<LoginResponse>>  LoginAsync(LoginRequest request);
         Task LogoutAsync(); 
         Task<ActionResult<LoginResponse>> RefreshAsync(); 
-        Task<RegisterResponse> RegisterAsync(RegisterRequest request);
+        Task<ActionResult<RegisterResponse>> RegisterAsync(RegisterRequest request);
         Task<GetUserInfoResponse> GetUserInfoAsync(string userId);
         Task<ActionResult<UpdateUserInfoResponse>> UpdateUserInfoAsync(UpdateUserInfoRequest request);
         Task<ActionResult<ChangePasswordResponse>> ChangePasswordAsync(ChangePasswordRequest request);
@@ -24,5 +24,9 @@ namespace APIBasic.Services.Interfaces
 
         Task<ActionResult<SendResetPasswordCodeResponse>> SendResetPasswordCodeAsync(SendResetPasswordCodeRequest request);
         Task<ActionResult<CodeResetPasswordResponse>> CodeResetPasswordAsync(CodeResetPasswordRequest request);
+
+        Task<ActionResult<SendCodeResponse>> SendCodeAsync([FromBody] SendCodeRequest request);
+
+        Task<bool> CheckMailExist(string? mail);
     }
 }

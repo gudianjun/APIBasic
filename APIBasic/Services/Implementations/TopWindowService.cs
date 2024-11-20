@@ -7,6 +7,7 @@ using APIBasic.Repositories.Interfaces;
 using APIBasic.Services.Interfaces;
 using APIBasic.Utilities;
 using APIBasic.Validations;
+using AutoMapper;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,11 +32,13 @@ namespace APIBasic.Services.Implementations
         private readonly IMemoryCache _memoryCache;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly APIConfig _apiConfig;
+        private readonly IMapper _mapper;
         public TopWindowService(IConfiguration configuration,
             ITopWindowRepository topWindowRepository
             , ILogger<TopWindowService> logger, IMemoryCache memoryCache,
             IHttpContextAccessor httpContextAccessor
-            , IOptionsMonitor<APIConfig> apiConfig)
+            , IOptionsMonitor<APIConfig> apiConfig
+            , IMapper mapper) 
         {
             _httpContextAccessor = httpContextAccessor;
             _memoryCache = memoryCache;
@@ -43,6 +46,7 @@ namespace APIBasic.Services.Implementations
             _topWindowRepository = topWindowRepository;
             _configuration = configuration;
             _apiConfig = apiConfig.CurrentValue;
+            _mapper = mapper;
         }
 
 
@@ -97,6 +101,7 @@ namespace APIBasic.Services.Implementations
                         RefreshToken = refreshToken,
                         userInfo = new UserInfo()
                         {
+                            UserId = user.UserId,
                             Address = user.Address,
                             AvatarIcon = user.AvatarIcon,
                             CompanyName = user.CompanyName,
@@ -203,23 +208,42 @@ namespace APIBasic.Services.Implementations
                 }
             }
             throw new NotImplementedException("Not logged in or verification information is lost");
-        }
-
-
-
+        } 
 
         public async Task<GetUserInfoResponse> GetUserInfoAsync(string userId)
         {
             throw new NotImplementedException();
         }
-
-
-
-        public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
+        public async Task<ActionResult<RegisterResponse>> RegisterAsync(RegisterRequest request)
         {
-            throw new NotImplementedException();
+            string code = _topWindowRepository.LoadResetPasswordCode("SendCode_" + request.MailAddress);
+            if (code == request.ResetCode)
+            {// 生成用户数据，并保存到数据库 
+                User user = _mapper.Map<User>(request);
+                await _topWindowRepository.NewUserAsync(user);
+                return new ApiResponse<RegisterResponse>(HttpStatusCode.OK, "Successful registration", null).Result();
+            }
+            return new ApiResponse<RegisterResponse>(HttpStatusCode.NotFound, "Incorrect verification code", null).Result();
         }
+        public async Task<ActionResult<SendCodeResponse>> SendCodeAsync([FromBody] SendCodeRequest request)
+        {
+            string toEmail = request.Email;
+            // 生成随机5位数字验证码
+            Random random = new Random();
+            int code = random.Next(10000, 99999);
+            _topWindowRepository.SaveResetPasswordCode("SendCode_" + toEmail, code.ToString());
 
+            string message = $"Registration verification code is: {code}";
+            string subject = "Registration verification code";
+            var emailMessage = new MimeMessage();
+            emailMessage.From.Add(new MailboxAddress(_apiConfig.MailYourName, _apiConfig.SmtpUser));
+            emailMessage.To.Add(new MailboxAddress("", toEmail));
+            emailMessage.Subject = subject;
+            emailMessage.Body = new TextPart("plain") { Text = message };
+            await StringHelper.SendEmailAsync(toEmail, subject, _apiConfig, emailMessage);
+            return new ApiResponse<SendCodeResponse>(HttpStatusCode.OK,
+            "The verification code has been sent to the specified email address", null).Result(); 
+        }
         public async Task<ActionResult<UpdateUserInfoResponse>> UpdateUserInfoAsync(UpdateUserInfoRequest request)
         {
             var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
@@ -278,9 +302,14 @@ namespace APIBasic.Services.Implementations
                 emailMessage.Subject = subject;
                 emailMessage.Body = new TextPart("plain") { Text = message };
                 await StringHelper.SendEmailAsync(toEmail, subject, _apiConfig, emailMessage);
-            }
-            return new ApiResponse<SendResetPasswordCodeResponse>(HttpStatusCode.OK, 
+                return new ApiResponse<SendResetPasswordCodeResponse>(HttpStatusCode.OK,
                 "The verification code has been sent to the specified email address", null).Result();
+            }
+            else
+            {
+                return new ApiResponse<SendResetPasswordCodeResponse>(HttpStatusCode.NotFound, "Email not found", null).Result();
+            }
+
         }
 
         public async Task<ActionResult<CodeResetPasswordResponse>> CodeResetPasswordAsync(CodeResetPasswordRequest request)
@@ -304,6 +333,20 @@ namespace APIBasic.Services.Implementations
             {
                 return new ApiResponse<CodeResetPasswordResponse>(HttpStatusCode.NotFound, "Verification code error", null).Result();
             } 
+        }
+
+        /// <summary>
+        /// 检查邮箱是否存在
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> CheckMailExist(string? mail)
+        {
+            if (string.IsNullOrEmpty(mail))
+            {
+                return true;
+            }
+            var has = await _topWindowRepository.CheckIfValueExistsAsync("Users", "MailAddress", mail);
+            return has;
         }
     }
 }

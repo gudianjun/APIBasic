@@ -11,6 +11,8 @@ namespace APIBasic.Repositories.Interfaces
         Task<User?> GetUserInfoForMailAddressAsync(string mailAddress);
         Task<User?> GetUserByIdAsync(uint userId);
         Task SaveUserAsync(User user);
+
+        Task NewUserAsync(User user);
         Task<int> UpdateUserAsync(User user);
         Task ChangePasswordAsync(string userId, string newPassword);
 
@@ -18,5 +20,8 @@ namespace APIBasic.Repositories.Interfaces
 
         void SaveResetPasswordCode(string email, string code);
         string LoadResetPasswordCode(string email);
+
+        Task<bool> CheckIfValueExistsAsync(string tableName, string columnName, object value);
+
     }
 }

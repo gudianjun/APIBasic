@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace APIBasic.DTOs
 {
-    public class LoginRequest: IValidatableObject
+    public class LoginRequest 
     {
         /// <summary>
         /// 用户名。如果是邮件地址，就是邮件地址。
@@ -19,22 +19,6 @@ namespace APIBasic.DTOs
 
         [RegularExpression(@"(mobile|browser)")]
         public string AudienceName { get; set; } = Audience.Mobile;
-
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            // 判断Username是不是邮件地址
-            MailValidationAttribute mailValidationAttribute = new MailValidationAttribute();
  
-            if (Username == null || Password == null)
-            {
-
-            }
-            if (Username == "111")
-            {
-                yield return new ValidationResult(
-                    $"Classic movies must have a release year no later than {Username}.",
-                    new[] { nameof(Username) });
-            }
-        }
     }
 }

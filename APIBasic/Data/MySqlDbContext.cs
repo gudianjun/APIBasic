@@ -1715,6 +1715,7 @@ public partial class MySqlDbContext : DbContext
                 .HasColumnType("text")
                 .UseCollation("utf8mb3_general_ci")
                 .HasCharSet("utf8mb3");
+            entity.Property(e => e.Zip).HasMaxLength(10);
         });
 
         modelBuilder.Entity<Wxshare>(entity =>

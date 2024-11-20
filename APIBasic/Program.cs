@@ -60,6 +60,8 @@ builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>()
 builder.Services.AddInMemoryRateLimiting();
 // 得到全局的上下文对象
 builder.Services.AddHttpContextAccessor();
+// 注册 AutoMapper
+builder.Services.AddAutoMapper(typeof(Program));
 // 配置 CORS 策略
 var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 if(corsOrigins != null && corsOrigins.Contains("*"))
@@ -143,6 +145,20 @@ builder.Services.AddAuthentication(options =>
                         isRefresh = true;
                     }
                 }
+                // 从内存中获取用户Token信息
+                if (!memoryCache.TryGetValue(int.Parse(userId), out UserTokenInfo? userTokenInfo))
+                {
+                    context.Fail("Unauthorized: The user session does not exist and needs to login again.");
+                }
+                else
+                {
+                    if ((aud == Audience.Browser && sessionId != userTokenInfo!.BrowserSession)
+                    || (aud == Audience.Mobile && sessionId != userTokenInfo!.MobileSession))
+                    {
+                        context.Fail("Unauthorized: The Token has expired.");
+                    }
+                }
+
                 if (tokenType == TokenType.RefreshToken) 
                 { 
                     if(!isRefresh)
@@ -155,20 +171,7 @@ builder.Services.AddAuthentication(options =>
                     if (isRefresh)
                     {
                         context.Fail("Unauthorized: Wrong token type.");
-                    }
-                    // 从内存中获取用户Token信息
-                    if (!memoryCache.TryGetValue(int.Parse(userId), out UserTokenInfo? userTokenInfo))
-                    {
-                        context.Fail("Unauthorized: The user session does not exist and needs to login again.");
-                    }
-                    else
-                    {
-                        if ((aud == Audience.Browser && sessionId != userTokenInfo!.BrowserSession)
-                        || (aud == Audience.Mobile && sessionId != userTokenInfo!.MobileSession))
-                        {
-                            context.Fail("Unauthorized: The Token has expired.");
-                        }
-                    }
+                    } 
                 } 
             } 
             return Task.CompletedTask;

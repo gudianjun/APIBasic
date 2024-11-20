@@ -29,10 +29,12 @@ namespace APIBasic.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<ActionResult<RegisterResponse>> Register(RegisterRequest request)
         {
-            // 实现注册逻辑
-            return (new ApiResponse<RegisterResponse>(null)).Result();
+            var response = await _topWindowService.RegisterAsync(request);
+            // 实现用户信息修改逻辑
+            return response;
         }
 
         [HttpGet] 
@@ -89,6 +91,14 @@ namespace APIBasic.Controllers
         public async Task<ActionResult<CodeResetPasswordResponse>> CodeResetPassword([FromBody] CodeResetPasswordRequest request)
         {       
             var response = await _topWindowService.CodeResetPasswordAsync(request);
+            return response;
+        }
+
+        [HttpPost("send-code")]
+        [AllowAnonymous]
+        public async Task<ActionResult<SendCodeResponse>> SendCode([FromBody] SendCodeRequest request)
+        {
+            var response = await _topWindowService.SendCodeAsync(request);
             return response;
         }
     }

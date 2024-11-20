@@ -5,6 +5,7 @@ using APIBasic.Models;
 using APIBasic.Repositories.Interfaces; 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Linq.Expressions;
 
 namespace APIBasic.Repositories.Implementations
 {
@@ -58,7 +59,12 @@ namespace APIBasic.Repositories.Implementations
         {
             throw new NotImplementedException();
         }
-
+        public async  Task NewUserAsync(User user)
+        {
+            // 新增User表中的用户信息
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+        }
         public async Task<int> UpdateUserAsync(User user)
         {
             // 更新User表中的用户信息
@@ -104,6 +110,34 @@ namespace APIBasic.Repositories.Implementations
             {
                 return string.Empty;
             }
+        }
+
+
+        public async Task<bool> CheckIfValueExistsAsync(string tableName, string columnName, object value)
+        {
+            // 获取 DbSet 属性
+            var dbSetProperty = _context.GetType().GetProperty(tableName);
+            if (dbSetProperty == null)
+            {
+                throw new ArgumentException($"Table '{tableName}' does not exist in the context.");
+            }
+
+            // 获取 DbSet 实例
+            var dbSet = dbSetProperty.GetValue(_context) as IQueryable<object>;
+            if (dbSet == null)
+            {
+                throw new ArgumentException($"Table '{tableName}' is not a valid DbSet.");
+            }
+
+            // 构建动态查询
+            var parameter = Expression.Parameter(typeof(object), "x");
+            var property = Expression.Property(Expression.Convert(parameter, dbSet.ElementType), columnName);
+            var constant = Expression.Constant(value);
+            var equal = Expression.Equal(property, constant);
+            var lambda = Expression.Lambda<Func<object, bool>>(equal, parameter);
+
+            // 执行查询
+            return await dbSet.AnyAsync(lambda);
         }
     }
 }

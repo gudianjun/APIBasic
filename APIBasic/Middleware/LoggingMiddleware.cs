@@ -25,7 +25,7 @@ namespace APIBasic.Middleware
                 requestId = Guid.NewGuid().ToString();
                 request.Headers.TryAdd("X-Request-ID", requestId);
             }
-            request.Headers["X-ClientId"] = "dev-id-1";
+            // request.Headers["X-ClientId"] = "dev-id-1";
 
             var stopwatch = Stopwatch.StartNew();
             context.Response.Headers["X-Request-ID"] = requestId;

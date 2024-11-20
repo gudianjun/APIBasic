@@ -78,4 +78,6 @@ public partial class User
     public string? AvatarIcon { get; set; }
 
     public string? MailAddress { get; set; }
+
+    public string? Zip { get; set; }
 }
