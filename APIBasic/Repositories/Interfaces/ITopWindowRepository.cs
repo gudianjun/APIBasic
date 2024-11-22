@@ -23,5 +23,14 @@ namespace APIBasic.Repositories.Interfaces
 
         Task<bool> CheckIfValueExistsAsync(string tableName, string columnName, object value);
 
+
+        #region DesignFile
+        Task<List<DesignFile>> GetDesignFilesAsync(string deviceType, uint userId);
+        Task<DesignFile> GetDesignFileAsync(string deviceType, uint userId, string fileId); 
+        Task<int> UpdateDesignFileAsync(DesignFile designFile); 
+        Task<int> DeleteDesignFileAsync(string deviceType, uint userId, string fileId);
+        Task<int> AddDesignFileAsync(DesignFile designFile);
+        #endregion
+
     }
 }

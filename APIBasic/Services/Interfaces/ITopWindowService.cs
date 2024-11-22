@@ -7,9 +7,9 @@ namespace APIBasic.Services.Interfaces
 {
     public interface ITopWindowService
     {
-        Task<ActionResult<LoginResponse>>  LoginAsync(LoginRequest request);
-        Task LogoutAsync(); 
-        Task<ActionResult<LoginResponse>> RefreshAsync(); 
+        Task<ActionResult<LoginResponse>> LoginAsync(LoginRequest request);
+        Task LogoutAsync();
+        Task<ActionResult<LoginResponse>> RefreshAsync();
         Task<ActionResult<RegisterResponse>> RegisterAsync(RegisterRequest request);
         Task<GetUserInfoResponse> GetUserInfoAsync(string userId);
         Task<ActionResult<UpdateUserInfoResponse>> UpdateUserInfoAsync(UpdateUserInfoRequest request);

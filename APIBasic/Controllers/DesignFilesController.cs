@@ -12,14 +12,14 @@ namespace APIBasic.Controllers
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [Authorize]
-    public class FileManagementController : ControllerBase
+    public class DesignFilesController : ControllerBase
     {
         private readonly ITopWindowService _topWindowService;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<FileManagementController> _logger;
+        private readonly ILogger<DesignFilesController> _logger;
         private readonly IMemoryCache _memoryCache;
-        public FileManagementController(IConfiguration configuration, ITopWindowService topWindowService
-            , ILogger<FileManagementController> logger, IMemoryCache memoryCache)
+        public DesignFilesController(IConfiguration configuration, ITopWindowService topWindowService
+            , ILogger<DesignFilesController> logger, IMemoryCache memoryCache)
         {
             _memoryCache = memoryCache;
             _logger = logger;
@@ -34,7 +34,7 @@ namespace APIBasic.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        [HttpGet("type/{type}")]
+        [HttpGet]
         public async Task<ActionResult<GetFilesResponse>> GetFiles()
         {
             var response = await _topWindowService.GetFilesAsync();
@@ -46,7 +46,7 @@ namespace APIBasic.Controllers
         /// </summary>
         /// <param name="fileId">文件ID</param>
         /// <returns>文件内容</returns>
-        [HttpGet("download/{fileId}")]
+        [HttpGet("{fileId}")]
         [Authorize]
         public async Task<ActionResult<DownloadFileResponse>> DownloadFileContent([Required]string fileId)
         {
@@ -59,7 +59,7 @@ namespace APIBasic.Controllers
         /// </summary>
         /// <param name="request">新文件请求</param>
         /// <returns>创建结果</returns>
-        [HttpPost("create")]
+        [HttpPost]
         [Authorize]
         public async Task<ActionResult<CreateFileResponse>> CreateFile([FromBody] CreateFileRequest request)
         {
@@ -72,7 +72,7 @@ namespace APIBasic.Controllers
         /// </summary>
         /// <param name="fileId">文件ID</param>
         /// <returns>删除结果</returns>
-        [HttpDelete("delete/{fileId}")]
+        [HttpDelete("{fileId}")]
         [Authorize]
         public async Task<ActionResult<DeleteFileResponse>> DeleteFile([Required] string fileId)
         {
@@ -86,7 +86,7 @@ namespace APIBasic.Controllers
         /// <param name="fileId">文件ID</param>
         /// <param name="request">更新文件请求</param>
         /// <returns>更新结果</returns>
-        [HttpPut("update/{fileId}")]
+        [HttpPut("{fileId}")]
         [Authorize]
         public async Task<ActionResult<UpdateFileResponse>> UpdateFile([Required]string fileId, [FromBody] UpdateFileRequest request)
         {

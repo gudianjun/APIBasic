@@ -35,8 +35,9 @@ namespace APIBasic.Services.Implementations
         private readonly IMapper _mapper;
         public TopWindowService(IConfiguration configuration,
             ITopWindowRepository topWindowRepository
-            , ILogger<TopWindowService> logger, IMemoryCache memoryCache,
-            IHttpContextAccessor httpContextAccessor
+            , ILogger<TopWindowService> logger
+            , IMemoryCache memoryCache
+            , IHttpContextAccessor httpContextAccessor
             , IOptionsMonitor<APIConfig> apiConfig
             , IMapper mapper) 
         {
@@ -210,9 +211,15 @@ namespace APIBasic.Services.Implementations
             throw new NotImplementedException("Not logged in or verification information is lost");
         } 
 
-        public async Task<GetUserInfoResponse> GetUserInfoAsync(string userId)
+      public async Task<GetUserInfoResponse> GetUserInfoAsync(string userId)
         {
-            throw new NotImplementedException();
+            var userInfo = await _topWindowRepository.GetUserByIdAsync(uint.Parse(userId));
+
+            if (userInfo != null)
+            {
+                return _mapper.Map<GetUserInfoResponse>(userInfo);
+            }
+            throw new KeyNotFoundException("User not found");
         }
         public async Task<ActionResult<RegisterResponse>> RegisterAsync(RegisterRequest request)
         {
@@ -260,22 +267,71 @@ namespace APIBasic.Services.Implementations
         // 文件相关
         public async Task<ActionResult<GetFilesResponse>> GetFilesAsync()
         {
-            throw new NotImplementedException();
+            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
+            // 如果用户ID为空，返回错误
+            string userId = claimsIdentity!.FindFirst(KeyName.USER_ID)?.Value 
+                ?? throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
+            string aud = claimsIdentity.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud)?.Value 
+                ?? throw new ArgumentNullException(nameof(aud), "Aud cannot be null");
+
+            var files = await _topWindowRepository.GetDesignFilesAsync(aud, uint.Parse(userId));
+            return (new ApiResponse<GetFilesResponse>(new GetFilesResponse()
+            {
+                DesignFiles = files
+            })).Result();
         }
 
         public async Task<ActionResult<DownloadFileResponse>> DownloadFileAsync([Required] string fileId)
         {
-            throw new NotImplementedException();
+            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
+            // 如果用户ID为空，返回错误
+            string userId = claimsIdentity!.FindFirst(KeyName.USER_ID)?.Value
+                ?? throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
+            string aud = claimsIdentity.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud)?.Value
+                ?? throw new ArgumentNullException(nameof(aud), "Aud cannot be null");
+
+            var file = await _topWindowRepository.GetDesignFileAsync(aud, uint.Parse(userId), fileId);
+
+            // 如果文件不存在，返回资源不存在错误
+            if (file == null)
+            {
+                return new ApiResponse<DownloadFileResponse>(HttpStatusCode.NotFound, "File not found", null).Result();
+            }
+            return new ApiResponse<DownloadFileResponse>(new DownloadFileResponse()
+            {
+                Design_File = file
+            }).Result();
         }
 
         public async Task<ActionResult<CreateFileResponse>> CreateFileAsync([FromBody] CreateFileRequest request)
         {
-            throw new NotImplementedException();
+            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
+            // 如果用户ID为空，返回错误
+            string userId = claimsIdentity!.FindFirst(KeyName.USER_ID)?.Value
+                ?? throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
+            string aud = claimsIdentity.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud)?.Value
+                ?? throw new ArgumentNullException(nameof(aud), "Aud cannot be null");
+            var file = _mapper.Map<DesignFile>(request);
+            file.UserId = uint.Parse(userId);
+            file.DeviceType = aud;
+            await _topWindowRepository.AddDesignFileAsync(file);
+            return new ApiResponse<CreateFileResponse>(null).Result();
         }
 
         public async Task<ActionResult<DeleteFileResponse>> DeleteFileAsync(string fileId)
         {
-            throw new NotImplementedException();
+            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
+            // 如果用户ID为空，返回错误
+            string userId = claimsIdentity!.FindFirst(KeyName.USER_ID)?.Value
+                ?? throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
+            string aud = claimsIdentity.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud)?.Value
+                ?? throw new ArgumentNullException(nameof(aud), "Aud cannot be null");
+            var count = await _topWindowRepository.DeleteDesignFileAsync(aud, uint.Parse(userId), fileId);
+            if (count > 0)
+            {
+                return new ApiResponse<DeleteFileResponse>(null).Result();
+            }
+            return new ApiResponse<DeleteFileResponse>(HttpStatusCode.NotFound, "Delete failed", null).Result(); 
         }
 
         public async Task<ActionResult<UpdateFileResponse>> UpdateFileAsync([Required] string fileId, [FromBody] UpdateFileRequest request)

@@ -28,7 +28,6 @@ namespace APIBasic.Repositories.Implementations
             throw new NotImplementedException();
         }
 
-
         public async Task<User?> GetUserInfoForUserNameAsync(string userName)
         {
             var rtn = await _context.Users.FirstOrDefaultAsync(x => x.UserName == userName);
@@ -54,7 +53,6 @@ namespace APIBasic.Repositories.Implementations
             throw new NotImplementedException();
         }
 
-
         public Task SaveUserAsync(User user)
         {
             throw new NotImplementedException();
@@ -73,7 +71,6 @@ namespace APIBasic.Repositories.Implementations
             return count;
         }
 
-
         public Task SaveLoginInfoAsync(int userId, string audience, string session)
         {
             if (!_memoryCache.TryGetValue(userId, out UserTokenInfo? userTokenInfo))
@@ -91,8 +88,7 @@ namespace APIBasic.Repositories.Implementations
             // 保存到内存中
             _memoryCache.Set(userId, userTokenInfo);
             return Task.CompletedTask;
-        }
-
+        } 
 
         public void SaveResetPasswordCode(string email, string code)
         {
@@ -138,6 +134,55 @@ namespace APIBasic.Repositories.Implementations
 
             // 执行查询
             return await dbSet.AnyAsync(lambda);
+        }
+
+        public async Task<List<DesignFile>> GetDesignFilesAsync(string deviceType, uint userId)
+        {
+            // 通过deviceType和userId获取DesignFile表中的设计文件信息，使用最后更新时间排序
+            var rtn = await _context.DesignFiles.Where(x => x.DeviceType == deviceType
+                && x.UserId == userId).OrderByDescending(x => x.LastUpdatedTime).ToListAsync();
+            return rtn;
+        }
+        public async Task<DesignFile> GetDesignFileAsync(string deviceType
+            , uint userId
+            , string fileId)
+        {
+            // 通过deviceType和fileId获取DesignFile表中的设计文件信息
+            var rtn = await _context.DesignFiles.Where(x => x.DeviceType == deviceType
+                && x.UserId == userId && x.FileId == fileId).ToListAsync();
+
+            if (rtn.Count > 0)
+            {
+                return rtn[0];
+            }
+            return null!;
+        }
+        public async Task<int> UpdateDesignFileAsync(DesignFile designFile)
+        {
+            // 更新DesignFile表中的设计文件信息
+            _context.DesignFiles.Update(designFile);
+            int count = await _context.SaveChangesAsync();
+            return count;
+        }
+        public async Task<int> DeleteDesignFileAsync(string deviceType, uint userId, string fileId)
+        {
+            // 删除DesignFile表中的设计文件信息
+            var designFile = await _context.DesignFiles.FirstOrDefaultAsync(x => x.DeviceType == deviceType
+                && x.UserId == userId && x.FileId == fileId);
+            if (designFile != null)
+            {
+                _context.DesignFiles.Remove(designFile);
+                int count = await _context.SaveChangesAsync();
+                return count;
+            }
+            return 0;
+        }
+        public async Task<int> AddDesignFileAsync(DesignFile designFile)
+        {
+            // 新增DesignFile表中的设计文件信息
+            await _context.DesignFiles.AddAsync(designFile);
+            int count = await _context.SaveChangesAsync();
+            return count;
         }
     }
 }

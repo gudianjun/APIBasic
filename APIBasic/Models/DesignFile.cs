@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace APIBasic.Models;
 
-public partial class FileManagement
+public partial class DesignFile
 {
     public string FileId { get; set; } = null!;
 
@@ -17,10 +17,6 @@ public partial class FileManagement
 
     public uint? UserId { get; set; }
 
-    public long? FileSize { get; set; }
-
-    public string? FileFormat { get; set; }
-
     public DateTime? LastUpdatedTime { get; set; }
 
     public DateTime CreatedTime { get; set; }
@@ -28,4 +24,8 @@ public partial class FileManagement
     public string FileContent { get; set; } = null!;
 
     public string? Remarks { get; set; }
+
+    public string? Thumbnail1 { get; set; }
+
+    public string? Thumbnail2 { get; set; }
 }

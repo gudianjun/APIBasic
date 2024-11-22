@@ -1,11 +1,14 @@
 ﻿using APIBasic.Data;
 using APIBasic.DTOs;
+using APIBasic.Enums;
 using APIBasic.Models;
 using APIBasic.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Win32;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System.Security.Claims;
 
 namespace APIBasic.Controllers
 {
@@ -19,9 +22,15 @@ namespace APIBasic.Controllers
         private readonly IConfiguration _configuration; 
         private readonly ILogger<UsersController> _logger;
         private readonly IMemoryCache _memoryCache;
-        public UsersController(IConfiguration configuration , ITopWindowService topWindowService
-            , ILogger<UsersController> logger, IMemoryCache memoryCache)
+        private readonly IHttpContextAccessor _httpContextAccessor;  
+        public UsersController(
+            IConfiguration configuration 
+            , ITopWindowService topWindowService
+            , ILogger<UsersController> logger
+            , IMemoryCache memoryCache
+            , IHttpContextAccessor httpContextAccessor)
         {
+            _httpContextAccessor = httpContextAccessor;
             _memoryCache = memoryCache;
             _logger = logger;
             _topWindowService = topWindowService;
@@ -40,8 +49,16 @@ namespace APIBasic.Controllers
         [HttpGet] 
         public async Task<ActionResult<GetUserInfoResponse>> GetUserInfo()
         {
-            // 实现用户信息检索逻辑
-            return (new ApiResponse<GetUserInfoResponse>(null)).Result(); 
+            // 通过HttpContext.User.Identity 获得当前用户的ID信息 
+            var claimsIdentity = this.User.Identity as ClaimsIdentity;
+            if (claimsIdentity != null)
+            {
+                string userId = claimsIdentity.FindFirst(KeyName.USER_ID)?.Value 
+                    ?? throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
+                var response = await _topWindowService.GetUserInfoAsync(userId);
+                return (new ApiResponse<GetUserInfoResponse>(response)).Result();
+            }
+            throw new NotImplementedException(); 
         }
         /// <summary>
         /// 更新用户信息

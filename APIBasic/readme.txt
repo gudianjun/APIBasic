@@ -51,17 +51,20 @@ MODIFY COLUMN `Address` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_gener
 MODIFY COLUMN `CompanyName` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ALTER TABLE `user`
 ADD COLUMN `Zip` VARCHAR(10) NULL, 
- CREATE TABLE `FileManagement` (
-    `FileID` VARCHAR(255) NOT NULL PRIMARY KEY,
-    `CurrentVersion` int NOT NULL,
-    `ResourceType` VARCHAR(255) NOT NULL,
-    `ResourceName` VARCHAR(255) NOT NULL,
-    `DeviceType` VARCHAR(255) NOT NULL,
-    `UserID` int unsigned,
-    `FileSize` BIGINT,
-    `FileFormat` VARCHAR(255),
-    `LastUpdatedTime` DATETIME,
-    `CreatedTime` DATETIME NOT NULL,
-    `FileContent` LONGTEXT NOT NULL,
-    `Remarks` TEXT
+
+
+
+CREATE TABLE `design_file` (
+    `FileID` VARCHAR(255) NOT NULL PRIMARY KEY, -- 文件ID
+    `CurrentVersion` int NOT NULL,              -- 当前版本
+    `ResourceType` VARCHAR(255) NOT NULL,       -- 资源类型
+    `ResourceName` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL, -- 资源名称
+    `DeviceType` VARCHAR(255) NOT NULL,         -- 设备类型
+    `UserID` int unsigned,                      -- 用户ID  
+    `LastUpdatedTime` DATETIME,                 -- 最后更新时间
+    `CreatedTime` DATETIME NOT NULL,            -- 创建时间
+    `FileContent` LONGTEXT NOT NULL,            -- 文件内容
+    `Remarks` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci, -- 备注
+    `Thumbnail1` LONGTEXT,                      -- 缩略图1
+    `Thumbnail2` LONGTEXT                       -- 缩略图2
 );

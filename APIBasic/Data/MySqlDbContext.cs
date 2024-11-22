@@ -25,7 +25,7 @@ public partial class MySqlDbContext : DbContext
 
     public virtual DbSet<CompanyAuthority> CompanyAuthorities { get; set; }
 
-    public virtual DbSet<FileManagement> FileManagements { get; set; }
+    public virtual DbSet<DesignFile> DesignFiles { get; set; }
 
     public virtual DbSet<FunctionList> FunctionLists { get; set; }
 
@@ -261,19 +261,22 @@ public partial class MySqlDbContext : DbContext
                 .HasCharSet("utf8mb3");
         });
 
-        modelBuilder.Entity<FileManagement>(entity =>
+        modelBuilder.Entity<DesignFile>(entity =>
         {
             entity.HasKey(e => e.FileId).HasName("PRIMARY");
 
-            entity.ToTable("FileManagement");
+            entity.ToTable("design_file");
 
             entity.Property(e => e.FileId).HasColumnName("FileID");
             entity.Property(e => e.CreatedTime).HasColumnType("datetime");
             entity.Property(e => e.DeviceType).HasMaxLength(255);
-            entity.Property(e => e.FileFormat).HasMaxLength(255);
             entity.Property(e => e.LastUpdatedTime).HasColumnType("datetime");
-            entity.Property(e => e.Remarks).HasColumnType("text");
-            entity.Property(e => e.ResourceName).HasMaxLength(255);
+            entity.Property(e => e.Remarks)
+                .HasColumnType("text")
+                .UseCollation("utf8mb4_general_ci");
+            entity.Property(e => e.ResourceName)
+                .HasMaxLength(255)
+                .UseCollation("utf8mb4_general_ci");
             entity.Property(e => e.ResourceType).HasMaxLength(255);
             entity.Property(e => e.UserId).HasColumnName("UserID");
         });
