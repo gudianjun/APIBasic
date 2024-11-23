@@ -3,6 +3,7 @@ using APIBasic.DTOs;
 using APIBasic.Enums;
 using APIBasic.Models;
 using APIBasic.Services.Interfaces;
+using APIBasic.Utilities;
 using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -50,14 +51,10 @@ namespace APIBasic.Controllers
         public async Task<ActionResult<GetUserInfoResponse>> GetUserInfo()
         {
             // 通过HttpContext.User.Identity 获得当前用户的ID信息 
-            var claimsIdentity = this.User.Identity as ClaimsIdentity;
-            if (claimsIdentity != null)
-            {
-                string userId = claimsIdentity.FindFirst(KeyName.USER_ID)?.Value 
-                    ?? throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
-                var response = await _topWindowService.GetUserInfoAsync(userId);
+            var tokenInfo =  HttpContextHelper.GetTokenInfo();
+            var response = await _topWindowService.GetUserInfoAsync(tokenInfo.UserId.ToString());
                 return (new ApiResponse<GetUserInfoResponse>(response)).Result();
-            }
+           
             throw new NotImplementedException(); 
         }
         /// <summary>

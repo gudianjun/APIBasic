@@ -39,7 +39,7 @@ namespace APIBasic.Services.Implementations
             , IMemoryCache memoryCache
             , IHttpContextAccessor httpContextAccessor
             , IOptionsMonitor<APIConfig> apiConfig
-            , IMapper mapper) 
+            , IMapper mapper)
         {
             _httpContextAccessor = httpContextAccessor;
             _memoryCache = memoryCache;
@@ -115,103 +115,72 @@ namespace APIBasic.Services.Implementations
         }
         public async Task<ActionResult<LoginResponse>> RefreshAsync()
         {
-            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
-            if (claimsIdentity != null)
+            var tokenInfo = HttpContextHelper.GetTokenInfo();
+            string session = Guid.NewGuid().ToString();
+
+            string accessToken = StringHelper.CreateToken(session, tokenInfo.UserId.ToString()
+                , tokenInfo.UserName
+                , _configuration["Jwt:Key"]!
+                , _configuration["Jwt:Issuer"] ?? "issuer"
+                , tokenInfo.Audience
+                , TokenType.AccessToken
+                , DateTime.Now.AddMinutes(15));
+            string refreshToken = StringHelper.CreateToken(session, tokenInfo.UserId.ToString()
+               , tokenInfo.UserName
+               , _configuration["Jwt:Key"]!
+               , _configuration["Jwt:Issuer"] ?? "issuer"
+               , tokenInfo.Audience
+               , TokenType.RefreshToken
+               , DateTime.Now.AddDays(30));
+
+            // 保存用户Token到内存中，用来登录校验
+            await _topWindowRepository.SaveLoginInfoAsync((int)tokenInfo.UserId, tokenInfo.Audience,
+                session);
+            var response = new ApiResponse<LoginResponse>(new LoginResponse()
             {
-                string session = Guid.NewGuid().ToString();
-                var userId = claimsIdentity.FindFirst(KeyName.USER_ID)?.Value;
-                var userName = claimsIdentity.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-                var AudienceName = claimsIdentity.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud)?.Value;
-
-                string accessToken = StringHelper.CreateToken(session, userId!
-                    , userName!
-                    , _configuration["Jwt:Key"]!
-                    , _configuration["Jwt:Issuer"] ?? "issuer"
-                    , AudienceName!
-                    , TokenType.AccessToken
-                    , DateTime.Now.AddMinutes(15));
-                string refreshToken = StringHelper.CreateToken(session, userId!
-                   , userName!
-                   , _configuration["Jwt:Key"]!
-                   , _configuration["Jwt:Issuer"] ?? "issuer"
-                   , AudienceName!
-                   , TokenType.RefreshToken
-                   , DateTime.Now.AddDays(30));
-
-                // 保存用户Token到内存中，用来登录校验
-                await _topWindowRepository.SaveLoginInfoAsync((int)int.Parse(userId!), AudienceName!,
-                    session);
-                var response = new ApiResponse<LoginResponse>(new LoginResponse()
-                {
-                    Token = accessToken,
-                    RefreshToken = refreshToken,
-                    userInfo = null
-                });
-                return response.Result();
-            }
-            return (new ApiResponse<LoginResponse>(HttpStatusCode.NotFound, "Refresh token failed, need to log in again", null)).Result();
+                Token = accessToken,
+                RefreshToken = refreshToken,
+                userInfo = null
+            });
+            return response.Result();
         }
         public async Task LogoutAsync()
         {
-            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
-            if (claimsIdentity != null)
-            {
-                var userId = claimsIdentity.FindFirst(KeyName.USER_ID)?.Value;
-                var aud = claimsIdentity.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud)?.Value;
-                if (userId != null && aud != null)
-                {
-                    await _topWindowRepository.SaveLoginInfoAsync(int.Parse(userId), aud, "");
-                }
-            }
-            throw new NotImplementedException();
+            var tokenInfo = HttpContextHelper.GetTokenInfo();
+            await _topWindowRepository.SaveLoginInfoAsync((int)tokenInfo.UserId, tokenInfo.Audience, "");
         }
         public async Task<ActionResult<ChangePasswordResponse>> ChangePasswordAsync(ChangePasswordRequest request)
         {
-            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
-            if (claimsIdentity != null)
+            var tokenInfo = HttpContextHelper.GetTokenInfo();
+            User? user = null; 
+            user = await _topWindowRepository.GetUserByIdAsync(tokenInfo.UserId); 
+            if (user != null)
             {
-                var userId = claimsIdentity.FindFirst(KeyName.USER_ID)?.Value;
-                if (userId != null)
+                if (!StringHelper.VerifyPassword(request.OldPassword, user.Password ?? ""))
                 {
-                    User? user = null;
-                    if (uint.TryParse(userId, out uint id))
-                    {
-                        user = await _topWindowRepository.GetUserByIdAsync(id);
-                    }
-                    if (user != null)
-                    {
-                        if (!StringHelper.VerifyPassword(request.OldPassword, user.Password ?? ""))
-                        {
-                            return new ApiResponse<ChangePasswordResponse>(HttpStatusCode.NotFound, "Old password is incorrect", null).Result();
-                        }
-                        else
-                        {
-                            user.Password = StringHelper.HashPassword(request.NewPassword);
-                            int ncount = await _topWindowRepository.UpdateUserAsync(user);
-                            if (ncount > 0)
-                            {
-                                return new ApiResponse<ChangePasswordResponse>(null).Result();
-                            }
-                            else
-                            {
-                                return new ApiResponse<ChangePasswordResponse>(HttpStatusCode.NotFound, "Update Error!", null).Result();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        throw new NotImplementedException("Not logged in or verification information is lost");
-                    }
+                    return new ApiResponse<ChangePasswordResponse>(HttpStatusCode.NotFound, "Old password is incorrect", null).Result();
                 }
                 else
                 {
-                    throw new NotImplementedException("There is no user information in the token");
+                    user.Password = StringHelper.HashPassword(request.NewPassword);
+                    int nCount = await _topWindowRepository.UpdateUserAsync(user);
+                    if (nCount > 0)
+                    {
+                        return new ApiResponse<ChangePasswordResponse>(null).Result();
+                    }
+                    else
+                    {
+                        return new ApiResponse<ChangePasswordResponse>(HttpStatusCode.NotFound, "Update Error!", null).Result();
+                    }
                 }
             }
-            throw new NotImplementedException("Not logged in or verification information is lost");
-        } 
+            else
+            {
+                throw new NotImplementedException("Not logged in or verification information is lost");
+            } 
+        }
 
-      public async Task<GetUserInfoResponse> GetUserInfoAsync(string userId)
+        public async Task<GetUserInfoResponse> GetUserInfoAsync(string userId)
         {
             var userInfo = await _topWindowRepository.GetUserByIdAsync(uint.Parse(userId));
 
@@ -249,13 +218,12 @@ namespace APIBasic.Services.Implementations
             emailMessage.Body = new TextPart("plain") { Text = message };
             await StringHelper.SendEmailAsync(toEmail, subject, _apiConfig, emailMessage);
             return new ApiResponse<SendCodeResponse>(HttpStatusCode.OK,
-            "The verification code has been sent to the specified email address", null).Result(); 
+            "The verification code has been sent to the specified email address", null).Result();
         }
         public async Task<ActionResult<UpdateUserInfoResponse>> UpdateUserInfoAsync(UpdateUserInfoRequest request)
         {
-            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
-            var userId = claimsIdentity!.FindFirst(KeyName.USER_ID)?.Value;
-            User? user = await _topWindowRepository.GetUserByIdAsync(uint.Parse(userId!));
+            var tokenInfo = HttpContextHelper.GetTokenInfo();
+            User? user = await _topWindowRepository.GetUserByIdAsync(tokenInfo.UserId);
             user!.Name = request.Name;
             user!.CompanyName = request.CompanyName;
             user!.Address = request.Address;
@@ -267,14 +235,8 @@ namespace APIBasic.Services.Implementations
         // 文件相关
         public async Task<ActionResult<GetFilesResponse>> GetFilesAsync()
         {
-            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
-            // 如果用户ID为空，返回错误
-            string userId = claimsIdentity!.FindFirst(KeyName.USER_ID)?.Value 
-                ?? throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
-            string aud = claimsIdentity.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud)?.Value 
-                ?? throw new ArgumentNullException(nameof(aud), "Aud cannot be null");
-
-            var files = await _topWindowRepository.GetDesignFilesAsync(aud, uint.Parse(userId));
+            var tokenInfo = HttpContextHelper.GetTokenInfo();
+            var files = await _topWindowRepository.GetDesignFilesAsync(tokenInfo.Audience, tokenInfo.UserId);
             return (new ApiResponse<GetFilesResponse>(new GetFilesResponse()
             {
                 DesignFiles = files
@@ -283,14 +245,8 @@ namespace APIBasic.Services.Implementations
 
         public async Task<ActionResult<DownloadFileResponse>> DownloadFileAsync([Required] string fileId)
         {
-            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
-            // 如果用户ID为空，返回错误
-            string userId = claimsIdentity!.FindFirst(KeyName.USER_ID)?.Value
-                ?? throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
-            string aud = claimsIdentity.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud)?.Value
-                ?? throw new ArgumentNullException(nameof(aud), "Aud cannot be null");
-
-            var file = await _topWindowRepository.GetDesignFileAsync(aud, uint.Parse(userId), fileId);
+            var tokenInfo = HttpContextHelper.GetTokenInfo();
+            var file = await _topWindowRepository.GetDesignFileAsync(tokenInfo.Audience, tokenInfo.UserId, fileId);
 
             // 如果文件不存在，返回资源不存在错误
             if (file == null)
@@ -305,44 +261,77 @@ namespace APIBasic.Services.Implementations
 
         public async Task<ActionResult<CreateFileResponse>> CreateFileAsync([FromBody] CreateFileRequest request)
         {
-            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
             // 如果用户ID为空，返回错误
-            string userId = claimsIdentity!.FindFirst(KeyName.USER_ID)?.Value
-                ?? throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
-            string aud = claimsIdentity.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud)?.Value
-                ?? throw new ArgumentNullException(nameof(aud), "Aud cannot be null");
+            var tokenInfo = HttpContextHelper.GetTokenInfo();
             var file = _mapper.Map<DesignFile>(request);
-            file.UserId = uint.Parse(userId);
-            file.DeviceType = aud;
+            file.UserId = tokenInfo!.UserId;
+            file.DeviceType = tokenInfo.Audience;
             await _topWindowRepository.AddDesignFileAsync(file);
             return new ApiResponse<CreateFileResponse>(null).Result();
         }
 
         public async Task<ActionResult<DeleteFileResponse>> DeleteFileAsync(string fileId)
         {
-            var claimsIdentity = _httpContextAccessor?.HttpContext?.User.Identity as ClaimsIdentity;
-            // 如果用户ID为空，返回错误
-            string userId = claimsIdentity!.FindFirst(KeyName.USER_ID)?.Value
-                ?? throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
-            string aud = claimsIdentity.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud)?.Value
-                ?? throw new ArgumentNullException(nameof(aud), "Aud cannot be null");
-            var count = await _topWindowRepository.DeleteDesignFileAsync(aud, uint.Parse(userId), fileId);
+            var tokenInfo = HttpContextHelper.GetTokenInfo();
+            var count = await _topWindowRepository.DeleteDesignFileAsync(tokenInfo.Audience, tokenInfo.UserId, fileId);
             if (count > 0)
             {
-                return new ApiResponse<DeleteFileResponse>(null).Result();
+                return new ApiResponse<DeleteFileResponse>(new DeleteFileResponse() { DeleteFileId = fileId }).Result();
             }
-            return new ApiResponse<DeleteFileResponse>(HttpStatusCode.NotFound, "Delete failed", null).Result(); 
+            return new ApiResponse<DeleteFileResponse>(HttpStatusCode.NotFound, "Delete failed", null).Result();
         }
 
         public async Task<ActionResult<UpdateFileResponse>> UpdateFileAsync([Required] string fileId, [FromBody] UpdateFileRequest request)
         {
-            throw new NotImplementedException();
+            var tokenInfo = HttpContextHelper.GetTokenInfo();
+            var file = await _topWindowRepository.GetDesignFileForIDAsync(fileId);
+            if (file == null)
+            {
+                return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "File not found", null).Result();
+            }
+            if(file.UserId != tokenInfo.UserId
+                || file.DeviceType != tokenInfo.Audience)
+            {
+                return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "File not found", null).Result();
+            }
+            if(file.CurrentVersion != request.CurrentVersion)
+            {
+                return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "Version mismatch", null).Result();
+            }
+            file.CurrentVersion = file.CurrentVersion++;
+            file.LastUpdatedTime = DateTime.Now;
+            if(request.ResourceName != null)
+            {
+                file.ResourceName = request.ResourceName;
+            }
+            if (request.FileContent != null)
+            {
+                file.FileContent = request.FileContent;
+            }
+            if(request.Thumbnail1 != null) {
+                file.Thumbnail1 = request.Thumbnail1;
+            }
+            if (request.Thumbnail2 != null)
+            {
+                file.Thumbnail2 = request.Thumbnail2;
+            }
+            if (request.Remarks != null)
+            {
+                file.Remarks = request.Remarks;
+            }
+
+            int nCount =  await _topWindowRepository.UpdateDesignFileAsync(file);
+            if (nCount > 0)
+            {
+                return new ApiResponse<UpdateFileResponse>(new UpdateFileResponse() { NewDesignFile = file }).Result();
+            }
+            return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "Update failed", null).Result();
         }
 
         public async Task<ActionResult<SendResetPasswordCodeResponse>> SendResetPasswordCodeAsync(SendResetPasswordCodeRequest request)
         {
             var user = await _topWindowRepository.GetUserInfoForMailAddressAsync(request.Email);
-            if(user != null)
+            if (user != null)
             {
                 string toEmail = request.Email;
                 // 生成随机5位数字验证码
@@ -371,7 +360,7 @@ namespace APIBasic.Services.Implementations
         public async Task<ActionResult<CodeResetPasswordResponse>> CodeResetPasswordAsync(CodeResetPasswordRequest request)
         {
             string code = _topWindowRepository.LoadResetPasswordCode(request.Email);
-            if(code == request.ResetCode)
+            if (code == request.ResetCode)
             {
                 var user = await _topWindowRepository.GetUserInfoForMailAddressAsync(request.Email);
                 if (user != null)
@@ -388,7 +377,7 @@ namespace APIBasic.Services.Implementations
             else
             {
                 return new ApiResponse<CodeResetPasswordResponse>(HttpStatusCode.NotFound, "Verification code error", null).Result();
-            } 
+            }
         }
 
         /// <summary>

@@ -30,6 +30,8 @@ namespace APIBasic.Repositories.Interfaces
         Task<int> UpdateDesignFileAsync(DesignFile designFile); 
         Task<int> DeleteDesignFileAsync(string deviceType, uint userId, string fileId);
         Task<int> AddDesignFileAsync(DesignFile designFile);
+
+        Task<DesignFile?> GetDesignFileForIDAsync(string fileId);
         #endregion
 
     }

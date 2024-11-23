@@ -184,5 +184,12 @@ namespace APIBasic.Repositories.Implementations
             int count = await _context.SaveChangesAsync();
             return count;
         }
+
+        public async Task<DesignFile?> GetDesignFileForIDAsync(string fileId)
+        {
+            // 通过fileId获取DesignFile表中的设计文件信息
+            var rtn = await _context.DesignFiles.FirstOrDefaultAsync(x => x.FileId == fileId);
+            return rtn;
+        }
     }
 }

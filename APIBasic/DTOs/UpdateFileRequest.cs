@@ -1,13 +1,17 @@
-﻿namespace APIBasic.DTOs
+﻿using APIBasic.Enums;
+using System.ComponentModel.DataAnnotations;
+
+namespace APIBasic.DTOs
 {
     public class UpdateFileRequest
     {
+        [Required]
         public int CurrentVersion { get; set; }
-        public string ResourceType { get; set; } = null!;
 
+        [StringLength(50)]
         public string ResourceName { get; set; } = null!;
 
-        public string FileContent { get; set; } = null!;
+        public string? FileContent { get; set; } = null!;
 
         public string? Remarks { get; set; }
 

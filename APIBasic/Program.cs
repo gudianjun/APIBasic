@@ -30,6 +30,7 @@ using Microsoft.Extensions.Caching.Memory;
 using APIBasic.Enums;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
+using APIBasic.Utilities;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -60,8 +61,10 @@ builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>()
 builder.Services.AddInMemoryRateLimiting();
 // 得到全局的上下文对象
 builder.Services.AddHttpContextAccessor();
+
+
 // 注册 AutoMapper
-builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(typeof(Program)); 
 // 配置 CORS 策略
 var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 if(corsOrigins != null && corsOrigins.Contains("*"))
@@ -126,7 +129,7 @@ builder.Services.AddAuthentication(options =>
             var userId = context.Principal?.FindFirstValue(KeyName.USER_ID);
             var sessionId = context.Principal?.FindFirstValue(KeyName.SESSION_ID);
             var aud = context.Principal?.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud);
-            var tokenType = context.Principal?.FindFirstValue(TokenType.TOKEN_TYPE_TITLE);
+            var tokenType = context.Principal?.FindFirstValue(KeyName.TOKEN_TYPE_TITLE);
             if (userId == null || sessionId == null || aud == null || tokenType == null)
             {
                 context.Fail("Unauthorized: User authentication information error.");
@@ -352,7 +355,10 @@ app.Use(async (context, next) =>
 
 // 创建上传文件夹
 var apiConfig = app.Services.GetRequiredService<IOptions<APIConfig>>().Value;
-if(!Directory.Exists(apiConfig.UploadPath))
+// 配置 HttpContextHelper
+HttpContextHelper.Configure(app.Services.GetRequiredService<IHttpContextAccessor>()!);
+
+if (!Directory.Exists(apiConfig.UploadPath))
 {
     Directory.CreateDirectory(apiConfig.UploadPath);
 }

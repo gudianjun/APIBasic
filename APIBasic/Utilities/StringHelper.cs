@@ -1,4 +1,5 @@
 ﻿using APIBasic.Configurations;
+using APIBasic.DTOs;
 using APIBasic.Enums;
 using APIBasic.Models;
 using BCrypt.Net;
@@ -32,7 +33,7 @@ namespace APIBasic.Utilities
         {
             var claims = new[]
                     {
-                        new Claim(TokenType.TOKEN_TYPE_TITLE, tokenType),
+                        new Claim(KeyName.TOKEN_TYPE_TITLE, tokenType),
                         new Claim(KeyName.SESSION_ID, session),
                         new Claim(KeyName.USER_ID, userId),
                         new Claim(JwtRegisteredClaimNames.Sub, userName),
@@ -80,6 +81,39 @@ namespace APIBasic.Utilities
                 await client.SendAsync(emailMessage);
                 client.Disconnect(true);
             }
+        }
+
+        public static TokenInfo GetTokenInfo(ClaimsIdentity claimsIdentity)
+        {
+            if (claimsIdentity == null)
+            {
+                throw new ArgumentNullException(nameof(claimsIdentity), "ClaimsIdentity cannot be null");
+            }
+
+            string tokenType = claimsIdentity.FindFirst(KeyName.TOKEN_TYPE_TITLE)?.Value
+                ?? throw new ArgumentNullException(nameof(tokenType), "Token type cannot be null");
+            string sessionId = claimsIdentity.FindFirst(KeyName.SESSION_ID)?.Value
+                ?? throw new ArgumentNullException(nameof(sessionId), "Session ID cannot be null");
+            string userId = claimsIdentity.FindFirst(KeyName.USER_ID)?.Value
+                ?? throw new ArgumentNullException(nameof(userId), "User ID cannot be null");
+            string userName = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? throw new ArgumentNullException(nameof(userName), "User name cannot be null");
+            string jti = claimsIdentity.FindFirst(JwtRegisteredClaimNames.Jti)?.Value
+                ?? throw new ArgumentNullException(nameof(jti), "JTI cannot be null");
+            string role = claimsIdentity.FindFirst(ClaimTypes.Role)?.Value
+                ?? throw new ArgumentNullException(nameof(role), "Role cannot be null");
+            string audience = claimsIdentity.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud)?.Value
+                ?? throw new ArgumentNullException(nameof(audience), "Audience cannot be null");
+            return new TokenInfo
+            {
+                TokenType = tokenType,
+                SessionId = sessionId,
+                UserId = uint.Parse( userId),
+                UserName = userName,
+                Jti = jti,
+                Role = role,
+                Audience = audience
+            };
         }
     }
 }

@@ -1,6 +1,8 @@
-﻿using APIBasic.Models;
+﻿using APIBasic.Enums;
+using APIBasic.Models;
 using APIBasic.Utilities;
 using AutoMapper;
+using System.Security.Claims;
 
 namespace APIBasic.DTOs
 {
@@ -66,7 +68,21 @@ namespace APIBasic.DTOs
             .ForMember(dest => dest.EmailVerificationCode, opt => opt.MapFrom(src => src.EmailVerificationCode))
             .ForMember(dest => dest.AvatarIcon, opt => opt.MapFrom(src => src.AvatarIcon))
             .ForMember(dest => dest.MailAddress, opt => opt.MapFrom(src => src.MailAddress))
-            .ForMember(dest => dest.Zip, opt => opt.MapFrom(src => src.Zip)); 
+            .ForMember(dest => dest.Zip, opt => opt.MapFrom(src => src.Zip));
+             
+            CreateMap<CreateFileRequest, DesignFile>()
+                .ForMember(dest => dest.FileId, opt => opt.MapFrom(src => Guid.NewGuid().ToString()))
+                .ForMember(dest => dest.CurrentVersion, opt => opt.MapFrom(src => 1)) // 默认版本号为1
+                .ForMember(dest => dest.ResourceType, opt => opt.MapFrom(src => src.ResourceType))
+                .ForMember(dest => dest.ResourceName, opt => opt.MapFrom(src => src.ResourceName)) 
+                .ForMember(dest => dest.DeviceType, opt => opt.MapFrom(src => "")) // 设备类型信息
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src =>  0))    // 用户ID
+                .ForMember(dest => dest.LastUpdatedTime, opt => opt.MapFrom(src => DateTime.Now))   // 最后更新时间
+                .ForMember(dest => dest.CreatedTime, opt => opt.MapFrom(src => DateTime.Now))      // 创建时间
+                .ForMember(dest => dest.FileContent, opt => opt.MapFrom(src => src.FileContent))
+                .ForMember(dest => dest.Remarks, opt => opt.MapFrom(src => src.Remarks))
+                .ForMember(dest => dest.Thumbnail1, opt => opt.MapFrom(src => src.Thumbnail1))
+                .ForMember(dest => dest.Thumbnail2, opt => opt.MapFrom(src => src.Thumbnail2)) ;
         }
     }
 }
