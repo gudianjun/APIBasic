@@ -1,13 +1,9 @@
 ﻿using APIBasic.Configurations;
 using APIBasic.DTOs;
 using APIBasic.Enums;
-using APIBasic.Models;
-using BCrypt.Net;
 using MailKit.Net.Smtp;
 using Microsoft.IdentityModel.Tokens;
 using MimeKit;
-using MySqlX.XDevAPI;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -24,7 +20,7 @@ namespace APIBasic.Utilities
         {
             return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
         }
-        public static string CreateToken(string session , string userId, string userName
+        public static string CreateToken(string session, string userId, string userName
             , string securityKey
             , string issuer
             , string audience
@@ -62,10 +58,10 @@ namespace APIBasic.Utilities
         /// <param name="mimeMessage">发送消息对象</param>
         /// <returns></returns>
         public static async Task SendEmailAsync(string to,
-            string sub,  
+            string sub,
             APIConfig aPIConfig, MimeMessage mimeMessage)
         {
-            string toEmail = to; 
+            string toEmail = to;
             string subject = sub;
             string _smtpServer = aPIConfig.SmtpServer;
             int _smtpPort = aPIConfig.SmtpPort;
@@ -108,7 +104,7 @@ namespace APIBasic.Utilities
             {
                 TokenType = tokenType,
                 SessionId = sessionId,
-                UserId = uint.Parse( userId),
+                UserId = uint.Parse(userId),
                 UserName = userName,
                 Jti = jti,
                 Role = role,

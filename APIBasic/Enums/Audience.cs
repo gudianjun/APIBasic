@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace APIBasic.Enums
+﻿namespace APIBasic.Enums
 {
     public class Audience
     {

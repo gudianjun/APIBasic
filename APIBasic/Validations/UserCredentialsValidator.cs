@@ -1,6 +1,5 @@
 ﻿using APIBasic.DTOs;
 using FluentValidation;
-using FluentValidation.Results;
 
 namespace APIBasic.Validations
 {
@@ -11,9 +10,9 @@ namespace APIBasic.Validations
     {
         public UserCredentialsValidator()
         {
-        
-             
+
+
         }
-        
+
     }
 }

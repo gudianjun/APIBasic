@@ -12,23 +12,25 @@ namespace APIBasic.DTOs
     //•	403 Forbidden：禁止访问
     //•	404 Not Found：资源未找到
     //•	500 Internal Server Error：服务器内部错误
-    public class CustomActionResult : ActionResult
+    public class CustomActionResult<T> : ActionResult
     {
-        private readonly object? _value;
+        private readonly ApiResponse<T>? _value;
         private readonly int _statusCode;
 
-        public CustomActionResult(int statusCode, object? value)
+        public CustomActionResult(int statusCode, ApiResponse<T>? value)
         {
             _statusCode = statusCode;
             _value = value;
         }
 
+        public ApiResponse<T>? Value => _value;
+
         public override async Task ExecuteResultAsync(ActionContext context)
         {
-            var objectResult = new ObjectResult(_value)
+            var objectResult = new ObjectResult(Value)
             {
                 ContentTypes = new MediaTypeCollection { "application/json" },
-                DeclaredType = _value?.GetType(),
+                DeclaredType = Value?.GetType(),
                 StatusCode = _statusCode
             };
             await objectResult.ExecuteResultAsync(context);

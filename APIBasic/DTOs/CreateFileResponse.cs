@@ -30,6 +30,6 @@ namespace APIBasic.DTOs
         public DateTime? LastUpdatedTime { get; set; }
 
         public DateTime CreatedTime { get; set; }
- 
+
     }
 }

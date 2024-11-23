@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace APIBasic.Models;
+﻿namespace APIBasic.Models;
 
 public partial class Renderqueue
 {

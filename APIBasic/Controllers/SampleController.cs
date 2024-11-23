@@ -4,9 +4,7 @@ using APIBasic.DTOs;
 using APIBasic.Enums;
 using APIBasic.Utilities;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
@@ -71,7 +69,7 @@ namespace APIBasic.Controllers
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
- 
+
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -89,7 +87,7 @@ namespace APIBasic.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult<string> AdminEndpoint()
         {
-            return (new ApiResponse<string>("This is an admin endpoint")).Result(); 
+            return (new ApiResponse<string>("This is an admin endpoint")).Result();
         }
         /// <summary>
         /// 只有使用了user的token才能访问
@@ -99,7 +97,7 @@ namespace APIBasic.Controllers
         [Authorize(Roles = "User")]
         public ActionResult<string> UserEndpoint()
         {
-            return (new ApiResponse<string>("This is a user endpoint")).Result(); 
+            return (new ApiResponse<string>("This is a user endpoint")).Result();
         }
         /// <summary>
         /// 上传单文件
@@ -109,7 +107,7 @@ namespace APIBasic.Controllers
         [HttpPost("upload")]
         [AllowAnonymous]
         public async Task<IActionResult> UploadFile(IFormFile file)
-        { 
+        {
             if (file == null || file.Length == 0)
             {
                 return BadRequest(new { message = "No file uploaded" });
@@ -159,7 +157,7 @@ namespace APIBasic.Controllers
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        [HttpGet("download/{fileName}")]　
+        [HttpGet("download/{fileName}")]
         public async Task<IActionResult> DownloadFile(string fileName)
         {
             var filePath = Path.Combine(_apiConfig.UploadPath, fileName);
@@ -167,7 +165,7 @@ namespace APIBasic.Controllers
             if (!System.IO.File.Exists(filePath))
             {
                 return NotFound(new { message = "File not found" });
-            } 
+            }
             var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
             return File(fileBytes, "application/octet-stream", fileName);
         }
@@ -205,7 +203,7 @@ namespace APIBasic.Controllers
         {
             await Task.CompletedTask;
             return (new ApiResponse<string>(StringHelper.HashPassword(password))).Result();
-        } 
+        }
     }
 
 }

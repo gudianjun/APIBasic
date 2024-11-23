@@ -26,5 +26,5 @@ namespace APIBasic.Validations
             var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
             return emailRegex.IsMatch(email);
         }
-    } 
+    }
 }

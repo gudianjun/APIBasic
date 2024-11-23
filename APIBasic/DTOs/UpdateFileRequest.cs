@@ -1,5 +1,4 @@
-﻿using APIBasic.Enums;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace APIBasic.DTOs
 {

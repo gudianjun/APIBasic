@@ -2,7 +2,7 @@
 using APIBasic.DTOs;
 using APIBasic.Enums;
 using APIBasic.Models;
-using APIBasic.Repositories.Interfaces; 
+using APIBasic.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq.Expressions;
@@ -23,41 +23,24 @@ namespace APIBasic.Repositories.Implementations
             _configuration = configuration;
             _context = context;
         }
-        public Task ChangePasswordAsync(string userId, string newPassword)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<User?> GetUserInfoForUserNameAsync(string userName)
         {
             var rtn = await _context.Users.FirstOrDefaultAsync(x => x.UserName == userName);
             // 通过UserName获取User表中的用户信息
             return rtn;
         }
-
         public async Task<User?> GetUserInfoForMailAddressAsync(string mailAddress)
         {
             var rtn = await _context.Users.FirstOrDefaultAsync(x => x.MailAddress == mailAddress);
             // 通过UserName获取User表中的用户信息
             return rtn;
         }
-
         public Task<User?> GetUserByIdAsync(uint userId)
         {
             var rtn = _context.Users.FirstOrDefaultAsync(x => x.UserId == userId);
             return rtn;
         }
-
-        public Task<User?> GetUserByUsernameAsync(string username)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task SaveUserAsync(User user)
-        {
-            throw new NotImplementedException();
-        }
-        public async  Task NewUserAsync(User user)
+        public async Task NewUserAsync(User user)
         {
             // 新增User表中的用户信息
             await _context.Users.AddAsync(user);
@@ -70,7 +53,6 @@ namespace APIBasic.Repositories.Implementations
             int count = await _context.SaveChangesAsync();
             return count;
         }
-
         public Task SaveLoginInfoAsync(int userId, string audience, string session)
         {
             if (!_memoryCache.TryGetValue(userId, out UserTokenInfo? userTokenInfo))
@@ -88,8 +70,7 @@ namespace APIBasic.Repositories.Implementations
             // 保存到内存中
             _memoryCache.Set(userId, userTokenInfo);
             return Task.CompletedTask;
-        } 
-
+        }
         public void SaveResetPasswordCode(string email, string code)
         {
             // 保存验证码到内存中， 10分钟有效
@@ -107,8 +88,6 @@ namespace APIBasic.Repositories.Implementations
                 return string.Empty;
             }
         }
-
-
         public async Task<bool> CheckIfValueExistsAsync(string tableName, string columnName, object value)
         {
             // 获取 DbSet 属性
@@ -135,7 +114,6 @@ namespace APIBasic.Repositories.Implementations
             // 执行查询
             return await dbSet.AnyAsync(lambda);
         }
-
         public async Task<List<DesignFile>> GetDesignFilesAsync(string deviceType, uint userId)
         {
             // 通过deviceType和userId获取DesignFile表中的设计文件信息，使用最后更新时间排序

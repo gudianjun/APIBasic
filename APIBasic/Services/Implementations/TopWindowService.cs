@@ -8,18 +8,14 @@ using APIBasic.Services.Interfaces;
 using APIBasic.Utilities;
 using APIBasic.Validations;
 using AutoMapper;
-using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Mvc;
 
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 
 using System.ComponentModel.DataAnnotations;
-using System.IdentityModel.Tokens.Jwt;
 using System.Net;
-using System.Security.Claims;
 
 
 namespace APIBasic.Services.Implementations
@@ -49,9 +45,7 @@ namespace APIBasic.Services.Implementations
             _apiConfig = apiConfig.CurrentValue;
             _mapper = mapper;
         }
-
-
-        public async Task<ActionResult<LoginResponse>> LoginAsync(LoginRequest request)
+        public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest request)
         {
             User? user = null;
             if (MailValidationAttribute.IsValidEmail(request.Username))
@@ -65,7 +59,7 @@ namespace APIBasic.Services.Implementations
             if (user == null)
             {
                 var response = new ApiResponse<LoginResponse>(HttpStatusCode.NotFound, "Incorrect username or password.", null);
-                return response.Result();
+                return response;
             }
             else
             {
@@ -74,7 +68,7 @@ namespace APIBasic.Services.Implementations
                 if (!StringHelper.VerifyPassword(request.Password, user!.Password ?? ""))
                 {
                     var response = new ApiResponse<LoginResponse>(HttpStatusCode.NotFound, "Incorrect username or password.", null);
-                    return response.Result();
+                    return response;
                 }
                 else
                 {
@@ -109,11 +103,11 @@ namespace APIBasic.Services.Implementations
                             Name = user.Name!
                         }
                     });
-                    return response.Result();
+                    return response;
                 }
             }
         }
-        public async Task<ActionResult<LoginResponse>> RefreshAsync()
+        public async Task<ApiResponse<LoginResponse>> RefreshAsync()
         {
             var tokenInfo = HttpContextHelper.GetTokenInfo();
             string session = Guid.NewGuid().ToString();
@@ -142,23 +136,23 @@ namespace APIBasic.Services.Implementations
                 RefreshToken = refreshToken,
                 userInfo = null
             });
-            return response.Result();
+            return response;
         }
         public async Task LogoutAsync()
         {
             var tokenInfo = HttpContextHelper.GetTokenInfo();
             await _topWindowRepository.SaveLoginInfoAsync((int)tokenInfo.UserId, tokenInfo.Audience, "");
         }
-        public async Task<ActionResult<ChangePasswordResponse>> ChangePasswordAsync(ChangePasswordRequest request)
+        public async Task<ApiResponse<ChangePasswordResponse>> ChangePasswordAsync(ChangePasswordRequest request)
         {
             var tokenInfo = HttpContextHelper.GetTokenInfo();
-            User? user = null; 
-            user = await _topWindowRepository.GetUserByIdAsync(tokenInfo.UserId); 
+            User? user = null;
+            user = await _topWindowRepository.GetUserByIdAsync(tokenInfo.UserId);
             if (user != null)
             {
                 if (!StringHelper.VerifyPassword(request.OldPassword, user.Password ?? ""))
                 {
-                    return new ApiResponse<ChangePasswordResponse>(HttpStatusCode.NotFound, "Old password is incorrect", null).Result();
+                    return new ApiResponse<ChangePasswordResponse>(HttpStatusCode.NotFound, "Old password is incorrect", null);
                 }
                 else
                 {
@@ -166,20 +160,19 @@ namespace APIBasic.Services.Implementations
                     int nCount = await _topWindowRepository.UpdateUserAsync(user);
                     if (nCount > 0)
                     {
-                        return new ApiResponse<ChangePasswordResponse>(null).Result();
+                        return new ApiResponse<ChangePasswordResponse>(null);
                     }
                     else
                     {
-                        return new ApiResponse<ChangePasswordResponse>(HttpStatusCode.NotFound, "Update Error!", null).Result();
+                        return new ApiResponse<ChangePasswordResponse>(HttpStatusCode.NotFound, "Update Error!", null);
                     }
                 }
             }
             else
             {
                 throw new NotImplementedException("Not logged in or verification information is lost");
-            } 
+            }
         }
-
         public async Task<GetUserInfoResponse> GetUserInfoAsync(string userId)
         {
             var userInfo = await _topWindowRepository.GetUserByIdAsync(uint.Parse(userId));
@@ -190,18 +183,18 @@ namespace APIBasic.Services.Implementations
             }
             throw new KeyNotFoundException("User not found");
         }
-        public async Task<ActionResult<RegisterResponse>> RegisterAsync(RegisterRequest request)
+        public async Task<ApiResponse<RegisterResponse>> RegisterAsync(RegisterRequest request)
         {
             string code = _topWindowRepository.LoadResetPasswordCode("SendCode_" + request.MailAddress);
             if (code == request.ResetCode)
             {// 生成用户数据，并保存到数据库 
                 User user = _mapper.Map<User>(request);
                 await _topWindowRepository.NewUserAsync(user);
-                return new ApiResponse<RegisterResponse>(HttpStatusCode.OK, "Successful registration", null).Result();
+                return new ApiResponse<RegisterResponse>(HttpStatusCode.OK, "Successful registration", null);
             }
-            return new ApiResponse<RegisterResponse>(HttpStatusCode.NotFound, "Incorrect verification code", null).Result();
+            return new ApiResponse<RegisterResponse>(HttpStatusCode.NotFound, "Incorrect verification code", null);
         }
-        public async Task<ActionResult<SendCodeResponse>> SendCodeAsync([FromBody] SendCodeRequest request)
+        public async Task<ApiResponse<SendCodeResponse>> SendCodeAsync([FromBody] SendCodeRequest request)
         {
             string toEmail = request.Email;
             // 生成随机5位数字验证码
@@ -218,9 +211,9 @@ namespace APIBasic.Services.Implementations
             emailMessage.Body = new TextPart("plain") { Text = message };
             await StringHelper.SendEmailAsync(toEmail, subject, _apiConfig, emailMessage);
             return new ApiResponse<SendCodeResponse>(HttpStatusCode.OK,
-            "The verification code has been sent to the specified email address", null).Result();
+            "The verification code has been sent to the specified email address", null);
         }
-        public async Task<ActionResult<UpdateUserInfoResponse>> UpdateUserInfoAsync(UpdateUserInfoRequest request)
+        public async Task<ApiResponse<UpdateUserInfoResponse>> UpdateUserInfoAsync(UpdateUserInfoRequest request)
         {
             var tokenInfo = HttpContextHelper.GetTokenInfo();
             User? user = await _topWindowRepository.GetUserByIdAsync(tokenInfo.UserId);
@@ -230,10 +223,10 @@ namespace APIBasic.Services.Implementations
             user!.AvatarIcon = request.AvatarIcon;
             user!.Tel = request.Tel;
             await _topWindowRepository.UpdateUserAsync(user);
-            return new ApiResponse<UpdateUserInfoResponse>(null).Result();
+            return new ApiResponse<UpdateUserInfoResponse>(null);
         }
         // 文件相关
-        public async Task<ActionResult<GetFilesResponse>> GetFilesAsync()
+        public async Task<ApiResponse<GetFilesResponse>> GetFilesAsync()
         {
             var tokenInfo = HttpContextHelper.GetTokenInfo();
             var files = await _topWindowRepository.GetDesignFilesAsync(tokenInfo.Audience, tokenInfo.UserId);
@@ -242,10 +235,9 @@ namespace APIBasic.Services.Implementations
             return (new ApiResponse<GetFilesResponse>(new GetFilesResponse()
             {
                 DesignFiles = designs
-            })).Result();
+            }));
         }
-
-        public async Task<ActionResult<DownloadFileResponse>> DownloadFileAsync([Required] string fileId)
+        public async Task<ApiResponse<DownloadFileResponse>> DownloadFileAsync([Required] string fileId)
         {
             var tokenInfo = HttpContextHelper.GetTokenInfo();
             var file = await _topWindowRepository.GetDesignFileAsync(tokenInfo.Audience, tokenInfo.UserId, fileId);
@@ -253,15 +245,14 @@ namespace APIBasic.Services.Implementations
             // 如果文件不存在，返回资源不存在错误
             if (file == null)
             {
-                return new ApiResponse<DownloadFileResponse>(HttpStatusCode.NotFound, "File not found", null).Result();
+                return new ApiResponse<DownloadFileResponse>(HttpStatusCode.NotFound, "File not found", null);
             }
             return new ApiResponse<DownloadFileResponse>(new DownloadFileResponse()
             {
                 Design_File = file
-            }).Result();
+            });
         }
-
-        public async Task<ActionResult<CreateFileResponse>> CreateFileAsync([FromBody] CreateFileRequest request)
+        public async Task<ApiResponse<CreateFileResponse>> CreateFileAsync([FromBody] CreateFileRequest request)
         {
             // 如果用户ID为空，返回错误
             var tokenInfo = HttpContextHelper.GetTokenInfo();
@@ -269,40 +260,38 @@ namespace APIBasic.Services.Implementations
             file.UserId = tokenInfo!.UserId;
             file.DeviceType = tokenInfo.Audience;
             await _topWindowRepository.AddDesignFileAsync(file);
-            return new ApiResponse<CreateFileResponse>(new CreateFileResponse(file)).Result();
+            return new ApiResponse<CreateFileResponse>(new CreateFileResponse(file));
         }
-
-        public async Task<ActionResult<DeleteFileResponse>> DeleteFileAsync(string fileId)
+        public async Task<ApiResponse<DeleteFileResponse>> DeleteFileAsync(string fileId)
         {
             var tokenInfo = HttpContextHelper.GetTokenInfo();
             var count = await _topWindowRepository.DeleteDesignFileAsync(tokenInfo.Audience, tokenInfo.UserId, fileId);
             if (count > 0)
             {
-                return new ApiResponse<DeleteFileResponse>(new DeleteFileResponse() { DeleteFileId = fileId }).Result();
+                return new ApiResponse<DeleteFileResponse>(new DeleteFileResponse() { DeleteFileId = fileId });
             }
-            return new ApiResponse<DeleteFileResponse>(HttpStatusCode.NotFound, "Delete failed", null).Result();
+            return new ApiResponse<DeleteFileResponse>(HttpStatusCode.NotFound, "Delete failed", null);
         }
-
-        public async Task<ActionResult<UpdateFileResponse>> UpdateFileAsync([Required] string fileId, [FromBody] UpdateFileRequest request)
+        public async Task<ApiResponse<UpdateFileResponse>> UpdateFileAsync([Required] string fileId, [FromBody] UpdateFileRequest request)
         {
             var tokenInfo = HttpContextHelper.GetTokenInfo();
             var file = await _topWindowRepository.GetDesignFileForIDAsync(fileId);
             if (file == null)
             {
-                return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "File not found", null).Result();
+                return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "File not found", null);
             }
-            if(file.UserId != tokenInfo.UserId
+            if (file.UserId != tokenInfo.UserId
                 || file.DeviceType != tokenInfo.Audience)
             {
-                return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "File not found", null).Result();
+                return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "File not found", null);
             }
-            if(file.CurrentVersion != request.CurrentVersion)
+            if (file.CurrentVersion != request.CurrentVersion)
             {
-                return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "Version mismatch", null).Result();
+                return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "Version mismatch", null);
             }
             file.CurrentVersion = file.CurrentVersion + 1;
             file.LastUpdatedTime = DateTime.Now;
-            if(!string.IsNullOrEmpty(request.ResourceName))
+            if (!string.IsNullOrEmpty(request.ResourceName))
             {
                 file.ResourceName = request.ResourceName;
             }
@@ -310,7 +299,8 @@ namespace APIBasic.Services.Implementations
             {
                 file.FileContent = request.FileContent;
             }
-            if(!string.IsNullOrEmpty(request.Thumbnail1)) {
+            if (!string.IsNullOrEmpty(request.Thumbnail1))
+            {
                 file.Thumbnail1 = request.Thumbnail1;
             }
             if (!string.IsNullOrEmpty(request.Thumbnail2))
@@ -322,15 +312,14 @@ namespace APIBasic.Services.Implementations
                 file.Remarks = request.Remarks;
             }
 
-            int nCount =  await _topWindowRepository.UpdateDesignFileAsync(file);
+            int nCount = await _topWindowRepository.UpdateDesignFileAsync(file);
             if (nCount > 0)
             {
-                return new ApiResponse<UpdateFileResponse>(new UpdateFileResponse() { NewDesignFile = file }).Result();
+                return new ApiResponse<UpdateFileResponse>(new UpdateFileResponse() { NewDesignFile = file });
             }
-            return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "Update failed", null).Result();
+            return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "Update failed", null);
         }
-
-        public async Task<ActionResult<SendResetPasswordCodeResponse>> SendResetPasswordCodeAsync(SendResetPasswordCodeRequest request)
+        public async Task<ApiResponse<SendResetPasswordCodeResponse>> SendResetPasswordCodeAsync(SendResetPasswordCodeRequest request)
         {
             var user = await _topWindowRepository.GetUserInfoForMailAddressAsync(request.Email);
             if (user != null)
@@ -350,16 +339,15 @@ namespace APIBasic.Services.Implementations
                 emailMessage.Body = new TextPart("plain") { Text = message };
                 await StringHelper.SendEmailAsync(toEmail, subject, _apiConfig, emailMessage);
                 return new ApiResponse<SendResetPasswordCodeResponse>(HttpStatusCode.OK,
-                "The verification code has been sent to the specified email address", null).Result();
+                "The verification code has been sent to the specified email address", null);
             }
             else
             {
-                return new ApiResponse<SendResetPasswordCodeResponse>(HttpStatusCode.NotFound, "Email not found", null).Result();
+                return new ApiResponse<SendResetPasswordCodeResponse>(HttpStatusCode.NotFound, "Email not found", null);
             }
 
         }
-
-        public async Task<ActionResult<CodeResetPasswordResponse>> CodeResetPasswordAsync(CodeResetPasswordRequest request)
+        public async Task<ApiResponse<CodeResetPasswordResponse>> CodeResetPasswordAsync(CodeResetPasswordRequest request)
         {
             string code = _topWindowRepository.LoadResetPasswordCode(request.Email);
             if (code == request.ResetCode)
@@ -369,19 +357,18 @@ namespace APIBasic.Services.Implementations
                 {
                     user.Password = StringHelper.HashPassword(request.NewPassword);
                     await _topWindowRepository.UpdateUserAsync(user);
-                    return new ApiResponse<CodeResetPasswordResponse>(null).Result();
+                    return new ApiResponse<CodeResetPasswordResponse>(null);
                 }
                 else
                 {
-                    return new ApiResponse<CodeResetPasswordResponse>(HttpStatusCode.NotFound, "User not found", null).Result();
+                    return new ApiResponse<CodeResetPasswordResponse>(HttpStatusCode.NotFound, "User not found", null);
                 }
             }
             else
             {
-                return new ApiResponse<CodeResetPasswordResponse>(HttpStatusCode.NotFound, "Verification code error", null).Result();
+                return new ApiResponse<CodeResetPasswordResponse>(HttpStatusCode.NotFound, "Verification code error", null);
             }
         }
-
         /// <summary>
         /// 检查邮箱是否存在
         /// </summary>

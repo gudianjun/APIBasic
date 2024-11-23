@@ -1,24 +1,21 @@
-﻿docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=111111 -e MYSQL_DATABASE=mydatabase -e MYSQL_USER=sa -e MYSQL_PASSWORD=111111 -p 3306:3306 -d mysql:latest
-安装Ef数据库工具
+﻿#创建Mysql数据库容器
+docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=111111 -e MYSQL_DATABASE=mydatabase -e MYSQL_USER=sa -e MYSQL_PASSWORD=111111 -p 3306:3306 -d mysql:latest
+#安装Ef数据库工具
 dotnet tool install --global dotnet-ef
- 
+#生成数据库模型以及上下文
 dotnet ef dbcontext scaffold "Server=140.83.84.36;Port=3306;Database=mydatabase;User=root;Password=111111;AllowPublicKeyRetrieval=True;;Connect Timeout=130;" Pomelo.EntityFrameworkCore.MySql -o ./Models --context-dir ./Data -c MySqlDbContext --force
-
-
-发布docker
+#发布程序到docker。 Net8.0
 docker build -t apibasic-image .
 docker run -d -p 8080:8080 -p 8081:8081 --name apibasic-container apibasic-image
 docker run -d -p 8081:8081 --name apibasic-container apibasic-image
-导入数据
-1,拷贝render.sql到容器
-2，进入容器找到文件，并执行一下命令
- docker exec -it mysql-container /bin/bash
+#导入数据
+1，拷贝render.sql到容器
+2，进入容器找到文件，并执行以下命令
+docker exec -it mysql-container /bin/bash
 mysql -h localhost -u root -p --default-character-set=utf8 mydatabase < render.sql
-
-API服务器功能描述
-1,日志记录
-查看LoggingMiddleware，记录公共日志。
-2，支持内存缓存功能
+#API服务器功能描述
+1，日志记录，查看LoggingMiddleware，记录公共日志。
+2，支持内存缓存功能。当前开发问的功能，保存了设备登录Session信息，以及验证码信息。
 3，使用Mysql数据库，上下文对象MySqlDbContext，模型保存在Models中
 4，系统其他配置使用在appsetting.json中的APIConfig配置，管理该对象的类为APIConfig
 5，增加了健康检查中间件，用来检测数据库连接是否可用以及服务是否可用。 地址为
@@ -34,7 +31,10 @@ http://localhost:5049/health
 14，客户端请求时，需要区分设备，请使用Audience中的字符串进行设定。
 15，返回值定义在ApiResponse中。
 16，自定义字段验证错误信息，查看InvalidModelStateResponseFactory
-17，增加自动对象映射功能，查看AutoMapperProfile
+17，增加自动对象映射功能，查看MappingProfile
+
+
+#####数据库设计，修改SQL######
 
 ALTER TABLE `user`
 ADD COLUMN `Address` VARCHAR(255) NULL,

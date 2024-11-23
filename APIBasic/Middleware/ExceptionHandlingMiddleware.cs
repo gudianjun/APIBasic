@@ -1,6 +1,4 @@
-﻿ 
-using Microsoft.AspNetCore.Http.HttpResults;
-using System.Net;
+﻿using System.Net;
 
 namespace APIBasic.Middleware
 {
@@ -13,7 +11,7 @@ namespace APIBasic.Middleware
         private readonly ILogger<ExceptionHandlingMiddleware> _logger;
         private readonly IWebHostEnvironment _env;
 
-        public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger, 
+        public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger,
             IWebHostEnvironment env)
         {
             _next = next;
@@ -33,7 +31,7 @@ namespace APIBasic.Middleware
                 await HandleExceptionAsync(context, ex);
             }
         }
-       
+
         private Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             if (!context.Response.HasStarted)

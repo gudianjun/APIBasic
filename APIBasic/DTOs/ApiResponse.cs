@@ -1,4 +1,4 @@
-﻿ 
+﻿
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -21,7 +21,10 @@ namespace APIBasic.DTOs
         public int StatusCode { get; set; }
         public string Message { get; set; }
         public T? Data { get; set; }
-
+        /// <summary>
+        /// 提示链接
+        /// </summary>
+        public List<Link> Links { get; set; } = new List<Link>();
         public ApiResponse(int statusCode, string message, T? data)
         {
             StatusCode = statusCode;
@@ -58,9 +61,15 @@ namespace APIBasic.DTOs
             Message = message;
             Data = data;
         }
+
+        public void AddLink(string href, string rel, string method)
+        {
+            Links.Add(new Link(href, rel, method));
+        }
+
         public ActionResult<T> Result()
         {
-            return new CustomActionResult(StatusCode, this);
+            return new CustomActionResult<T>(StatusCode, this);
         }
     }
 }

@@ -1,36 +1,29 @@
-﻿using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
-using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using APIBasic.Middleware;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.AspNetCore.Http;
-using APIBasic.Filters;
-using APIBasic.DTOs;
-using Microsoft.EntityFrameworkCore;
+﻿using APIBasic.Configurations;
 using APIBasic.Data;
-using Microsoft.Extensions.Configuration;
-using System.Security.Claims;
-using Microsoft.OpenApi.Models;
-using Google.Protobuf.WellKnownTypes;
-using System.Net;
-using APIBasic.Configurations;
-using Microsoft.Extensions.DependencyInjection;
-using FluentValidation.AspNetCore;
-using FluentValidation;
-using AspNetCoreRateLimit;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using APIBasic.Services.Interfaces;
-using APIBasic.Repositories.Interfaces;
-using APIBasic.Repositories.Implementations;
-using APIBasic.Services.Implementations;
-using Microsoft.Extensions.Caching.Memory;
+using APIBasic.DTOs;
 using APIBasic.Enums;
-using Microsoft.AspNetCore.Mvc;
-using System.Text.RegularExpressions;
+using APIBasic.Filters;
+using APIBasic.Middleware;
+using APIBasic.Repositories.Implementations;
+using APIBasic.Repositories.Interfaces;
+using APIBasic.Services.Implementations;
+using APIBasic.Services.Interfaces;
 using APIBasic.Utilities;
+using Asp.Versioning;
+using AspNetCoreRateLimit;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Net;
+using System.Security.Claims;
+using System.Text;
+using System.Text.RegularExpressions;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -64,10 +57,10 @@ builder.Services.AddHttpContextAccessor();
 
 
 // 注册 AutoMapper
-builder.Services.AddAutoMapper(typeof(Program)); 
+builder.Services.AddAutoMapper(typeof(Program));
 // 配置 CORS 策略
 var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
-if(corsOrigins != null && corsOrigins.Contains("*"))
+if (corsOrigins != null && corsOrigins.Contains("*"))
 {
     builder.Services.AddCors(options =>
     {
@@ -138,7 +131,7 @@ builder.Services.AddAuthentication(options =>
             {
                 bool isRefresh = false;
                 var requestPath = context.HttpContext.Request.Path.Value; // 获取完整路径字符串
-                if(requestPath != null)
+                if (requestPath != null)
                 {
                     // 正则表达式，判断
                     var regex = new Regex(@"^/api/v\d+/auth/refresh$", RegexOptions.IgnoreCase);
@@ -162,10 +155,10 @@ builder.Services.AddAuthentication(options =>
                     }
                 }
 
-                if (tokenType == TokenType.RefreshToken) 
-                { 
-                    if(!isRefresh)
-                    { 
+                if (tokenType == TokenType.RefreshToken)
+                {
+                    if (!isRefresh)
+                    {
                         context.Fail("Unauthorized: Wrong token type.");
                     }
                 }
@@ -174,9 +167,9 @@ builder.Services.AddAuthentication(options =>
                     if (isRefresh)
                     {
                         context.Fail("Unauthorized: Wrong token type.");
-                    } 
-                } 
-            } 
+                    }
+                }
+            }
             return Task.CompletedTask;
         },
         OnAuthenticationFailed = context =>
@@ -186,13 +179,13 @@ builder.Services.AddAuthentication(options =>
                 context.Response.ContentType = "application/json";
                 if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                 {
-                    context.Response.StatusCode = 440; 
+                    context.Response.StatusCode = 440;
                 }
                 else
                 {
                     context.Response.StatusCode = 401;
                 }
- 
+
                 var response = new ApiResponse<string>(context.Response.StatusCode, "Unauthorized", context.Exception.Message);
                 return context.Response.WriteAsJsonAsync(response);
             }
@@ -229,7 +222,8 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>(); // 注册全局过滤器
-}).ConfigureApiBehaviorOptions(option => {
+}).ConfigureApiBehaviorOptions(option =>
+{
     option.InvalidModelStateResponseFactory = (context) =>
     {
         var errors = context.ModelState.Where(e => e.Value?.Errors.Count > 0)
@@ -240,11 +234,11 @@ builder.Services.AddControllers(options =>
         }).ToList();
         ActionResult<object> response = (new ApiResponse<object>(HttpStatusCode.UnprocessableEntity, "Validation Failed!", errors)).Result();
         return response.Result!;
-    }; 
-}) ;
+    };
+});
 // 注册服务
 builder.Services.AddScoped<ITopWindowService, TopWindowService>();
-builder.Services.AddScoped<ITopWindowRepository, TopWindowRepository>(); 
+builder.Services.AddScoped<ITopWindowRepository, TopWindowRepository>();
 
 
 builder.Services.AddApiVersioning(options =>

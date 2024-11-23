@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-namespace APIBasic.DTOs
+﻿namespace APIBasic.DTOs
 {
-    public class LoginResponse  
+    public class LoginResponse
     {
         /// <summary>
         /// 访问用的token

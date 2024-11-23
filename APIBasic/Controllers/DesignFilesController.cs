@@ -1,10 +1,8 @@
 ﻿using APIBasic.DTOs;
 using APIBasic.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System.ComponentModel.DataAnnotations;
 
 namespace APIBasic.Controllers
@@ -29,8 +27,8 @@ namespace APIBasic.Controllers
         /// <summary>
         /// 分类检索户型设计信息。
         /// 通过传递的Request参数，来区分检索类型，
-        /// 1，户型图
-        /// 2，3D设计图
+        /// 1，户型图plan
+        /// 2，3D设计图 3d
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -38,7 +36,7 @@ namespace APIBasic.Controllers
         public async Task<ActionResult<GetFilesResponse>> GetFiles()
         {
             var response = await _topWindowService.GetFilesAsync();
-            return response;
+            return response.Result();
         }
 
         /// <summary>
@@ -48,10 +46,10 @@ namespace APIBasic.Controllers
         /// <returns>文件内容</returns>
         [HttpGet("{fileId}")]
         [Authorize]
-        public async Task<ActionResult<DownloadFileResponse>> DownloadFileContent([Required]string fileId)
+        public async Task<ActionResult<DownloadFileResponse>> DownloadFileContent([Required] string fileId)
         {
             var response = await _topWindowService.DownloadFileAsync(fileId);
-            return response;
+            return response.Result();
         }
 
         /// <summary>
@@ -64,7 +62,7 @@ namespace APIBasic.Controllers
         public async Task<ActionResult<CreateFileResponse>> CreateFile([FromBody] CreateFileRequest request)
         {
             var response = await _topWindowService.CreateFileAsync(request);
-            return response;
+            return response.Result();
         }
 
         /// <summary>
@@ -77,7 +75,7 @@ namespace APIBasic.Controllers
         public async Task<ActionResult<DeleteFileResponse>> DeleteFile([Required] string fileId)
         {
             var response = await _topWindowService.DeleteFileAsync(fileId);
-            return response;
+            return response.Result();
         }
 
         /// <summary>
@@ -88,10 +86,10 @@ namespace APIBasic.Controllers
         /// <returns>更新结果</returns>
         [HttpPut("{fileId}")]
         [Authorize]
-        public async Task<ActionResult<UpdateFileResponse>> UpdateFile([Required]string fileId, [FromBody] UpdateFileRequest request)
+        public async Task<ActionResult<UpdateFileResponse>> UpdateFile([Required] string fileId, [FromBody] UpdateFileRequest request)
         {
             var response = await _topWindowService.UpdateFileAsync(fileId, request);
-            return response;
+            return response.Result();
         }
     }
 }

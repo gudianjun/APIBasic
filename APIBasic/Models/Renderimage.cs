@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace APIBasic.Models;
+﻿namespace APIBasic.Models;
 
 /// <summary>
 /// 保存渲染时回传图片

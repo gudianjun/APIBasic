@@ -1,10 +1,4 @@
-﻿using APIBasic.Enums;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-
-namespace APIBasic.DTOs
+﻿namespace APIBasic.DTOs
 {
     public class TokenInfo
     {
@@ -24,7 +18,7 @@ namespace APIBasic.DTOs
         /// 用户名
         /// </summary>
         public string UserName { get; set; } = null!;
- 
+
         /// <summary>
         /// 令牌唯一标识
         /// </summary>
@@ -36,6 +30,6 @@ namespace APIBasic.DTOs
         /// <summary>
         /// 设备类型信息
         /// </summary>
-        public string Audience { get; set; } = null!; 
+        public string Audience { get; set; } = null!;
     }
 }

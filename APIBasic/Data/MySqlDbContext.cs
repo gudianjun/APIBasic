@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using APIBasic.Models;
+﻿using APIBasic.Models;
 using Microsoft.EntityFrameworkCore;
-using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
 
 namespace APIBasic.Data;
 

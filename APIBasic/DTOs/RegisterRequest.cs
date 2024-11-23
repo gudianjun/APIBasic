@@ -5,28 +5,28 @@ namespace APIBasic.DTOs
 {
     public class RegisterRequest
     {
-        [Required(ErrorMessage = "Name is required")] 
+        [Required(ErrorMessage = "Name is required")]
         [StringLength(50)]
         public string? Name { get; set; }
 
         [Required(ErrorMessage = "Email is required")]
         [MailValidation(ErrorMessage = "Not a valid email address")]
         [StringLength(50)]
-        public string? MailAddress { get; set; } 
+        public string? MailAddress { get; set; }
         //
         // 摘要:
         //     The code sent to the user's email to reset the password. To get the reset code,
         //     first make a "/forgotPassword" request.
-        [Required(ErrorMessage = "ResetCode is required")] 
+        [Required(ErrorMessage = "ResetCode is required")]
         [StringLength(5)]
         [RegularExpression(@"\d{5}")]
         public required string ResetCode { get; init; }
 
- 
+
         [StringLength(50)]
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$", ErrorMessage = "Password must contain at least 8 characters, including uppercase, lowercase letters and numbers")]
         [Required(ErrorMessage = "Password is required")]
-         public required string Password { get; init; }
+        public required string Password { get; init; }
         [StringLength(250)]
         public string? CompanyName { get; set; }
         [StringLength(250)]

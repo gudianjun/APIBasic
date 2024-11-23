@@ -5,8 +5,8 @@ namespace APIBasic.Services.Implementations
 {
     public class SampleService : ISampleService
     {
-        public SampleService() 
-        { 
+        public SampleService()
+        {
         }
 
         public Logininfo GetLogininfo(string username, string password)

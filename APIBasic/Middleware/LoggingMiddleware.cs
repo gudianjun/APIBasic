@@ -1,5 +1,4 @@
-﻿using Org.BouncyCastle.Asn1.Ocsp;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace APIBasic.Middleware
 {
@@ -30,7 +29,7 @@ namespace APIBasic.Middleware
             var stopwatch = Stopwatch.StartNew();
             context.Response.Headers["X-Request-ID"] = requestId;
             // 获得真实的客户端IP地址
-            string remoteIpAddress = context.Connection.RemoteIpAddress?.ToString()?? "unknown";
+            string remoteIpAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             // 获取客户端的域名
             string clientHost = request.Headers["Host"].ToString();
             string referer = request.Headers["Referer"].ToString();

@@ -1,5 +1,4 @@
-﻿using APIBasic.Controllers;
-using APIBasic.DTOs;
+﻿using APIBasic.DTOs;
 using APIBasic.Services.Interfaces;
 using FluentValidation;
 using Microsoft.Extensions.Caching.Memory;
@@ -26,7 +25,7 @@ namespace APIBasic.Validations
             {
                 bool has = _topWindowService.CheckMailExist(x.MailAddress).GetAwaiter().GetResult();
                 return !has;
-            }).WithMessage("MailAddress already exists"); 
+            }).WithMessage("MailAddress already exists");
         }
     }
 }
