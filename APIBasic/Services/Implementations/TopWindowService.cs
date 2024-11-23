@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-
+using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 
 using System.ComponentModel.DataAnnotations;
@@ -237,9 +237,11 @@ namespace APIBasic.Services.Implementations
         {
             var tokenInfo = HttpContextHelper.GetTokenInfo();
             var files = await _topWindowRepository.GetDesignFilesAsync(tokenInfo.Audience, tokenInfo.UserId);
+            // 得到DesignBaseInfo列表，把files转换成DesignBaseInfo列表
+            var designs = files.Select(x => new DesignBaseInfo(x)).ToList();
             return (new ApiResponse<GetFilesResponse>(new GetFilesResponse()
             {
-                DesignFiles = files
+                DesignFiles = designs
             })).Result();
         }
 
@@ -267,7 +269,7 @@ namespace APIBasic.Services.Implementations
             file.UserId = tokenInfo!.UserId;
             file.DeviceType = tokenInfo.Audience;
             await _topWindowRepository.AddDesignFileAsync(file);
-            return new ApiResponse<CreateFileResponse>(null).Result();
+            return new ApiResponse<CreateFileResponse>(new CreateFileResponse(file)).Result();
         }
 
         public async Task<ActionResult<DeleteFileResponse>> DeleteFileAsync(string fileId)
@@ -298,24 +300,24 @@ namespace APIBasic.Services.Implementations
             {
                 return new ApiResponse<UpdateFileResponse>(HttpStatusCode.NotFound, "Version mismatch", null).Result();
             }
-            file.CurrentVersion = file.CurrentVersion++;
+            file.CurrentVersion = file.CurrentVersion + 1;
             file.LastUpdatedTime = DateTime.Now;
-            if(request.ResourceName != null)
+            if(!string.IsNullOrEmpty(request.ResourceName))
             {
                 file.ResourceName = request.ResourceName;
             }
-            if (request.FileContent != null)
+            if (!string.IsNullOrEmpty(request.FileContent))
             {
                 file.FileContent = request.FileContent;
             }
-            if(request.Thumbnail1 != null) {
+            if(!string.IsNullOrEmpty(request.Thumbnail1)) {
                 file.Thumbnail1 = request.Thumbnail1;
             }
-            if (request.Thumbnail2 != null)
+            if (!string.IsNullOrEmpty(request.Thumbnail2))
             {
                 file.Thumbnail2 = request.Thumbnail2;
             }
-            if (request.Remarks != null)
+            if (!string.IsNullOrEmpty(request.Remarks))
             {
                 file.Remarks = request.Remarks;
             }
