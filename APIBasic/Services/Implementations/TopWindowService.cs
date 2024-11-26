@@ -98,7 +98,7 @@ namespace APIBasic.Services.Implementations
                         {
                             UserId = user.UserId,
                             Address = user.Address,
-                            AvatarIcon = user.AvatarIcon,
+                            AvatarIcon = user.AvatarIcon??"",
                             CompanyName = user.CompanyName,
                             Name = user.Name!
                         }
