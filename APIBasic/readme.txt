@@ -68,3 +68,11 @@ CREATE TABLE `design_file` (
     `Thumbnail1` LONGTEXT,                      -- 缩略图1
     `Thumbnail2` LONGTEXT                       -- 缩略图2
 );
+
+
+3.	创建迁移： 使用 EF Core 的迁移功能来创建数据库架构。首先，创建一个初始迁移：
+dotnet ef migrations add InitialCreate 
+4.	更新数据库： 使用迁移来更新数据库，这将根据迁移文件重建数据库架构：
+dotnet ef database update
+5.	重建数据库： 如果你需要重建数据库，可以先删除现有的数据库，然后重新应用迁移。你可以通过以下命令删除数据库：
+dotnet ef database drop
